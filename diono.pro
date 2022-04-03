@@ -297,7 +297,7 @@ function Date2DOY, idate
 	END
 
 
-pro diono, r_dst, r_ip, B_sq, date_i, date_f
+pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
 
 	On_error, 2
 	compile_opt idl2, HIDDEN
@@ -310,25 +310,21 @@ pro diono, r_dst, r_ip, B_sq, date_i, date_f
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
 
-    d_dst = dst_data(yr_i)
-     
+    d_dst = dst_data(yr_i)     
     i_dst   = d_dst.Dst
-    month   = d_dst.month
-    day     = d_dst.day
     hour    = d_dst.hour
-    dst_doy = d_dst.DOY
-          
-    t_data  = tec_data([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])    
-    DOY     = t_data.DOY
-    fn = n_elements(DOY)
+    dst_doy = d_dst.DOY          
 ;###############################################################################   
-    doy_i = DOY[0]
-    doy_f = DOY[fn-1]
-        
-    time_w = timegen(n_elements(t_data.DOY), start=julday(1, doy_i, yr_i, $
-                   0), final=julday(1, doy_f, yr_f, 23))
-    
-
+    year = d_dst.year
+    tiempo = TIMEGEN(n_elements(year), START=julday(mh_i, dy_i,  $
+                     year, 0), UNITS='Hours')  
+                                        
+        iyear = strmid(string(yr_i, format='(I4)'),2,2)
+        fyear = strmid(string(yr_f, format='(I4)'),2,2)
+                
+        idoy      = Date2DOY(string(iyear, mh_i, dy_i,format = '(I02,I02,I02)'))
+        fdoy      = Date2DOY(string(fyear, mh_f, dy_f,format = '(I02,I02,I02)'))
+  
     tw      = n_elements(time_w)
     tot_days= findgen(tw*24)/24.0     
     dst     = i_dst[(doy_i*24)-24:doy_f*24-1]
