@@ -178,19 +178,13 @@ function ip_data, date
 	day 	= date[2]	
 
         header = 60      ; Defining number of lines of the header 
-	;	file = DIALOG_PICKFILE(FILTER='*.dat')
-
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 ;reading data files
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 
         date = string(year, month, day, format = '(I4, "-", I02, "-", I02)')
-        ;yr = string(year, format = '(I4)')
-        ;mt = string(month, format = '(I02)')
-        ;dy = string(day, format = '(I02)')
 		
 		file_name = '../rutidl/ip/'+date+'.dat'
-       ; file_name = '../rutidl/ip/'+yr+'-'+mt+'-'+dy+'.csv'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -248,7 +242,6 @@ function baseline_sq, date
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
 		number_of_lines = FILE_LINES(file)
-	   ; print, number_of_lines
 		data = STRARR(number_of_lines)
 
 		openr, lun, file, /GET_LUN, ERROR=err
@@ -271,11 +264,10 @@ function baseline_sq, date
 		return, B_sq
 end
 
-pro tec, r_tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
+pro tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
 
 	On_error, 2
 	compile_opt idl2, HIDDEN
-    ;print, t
 
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
@@ -286,7 +278,7 @@ pro tec, r_tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
 	dy_f 	= date_f[2]
 
     d_dst = dst_data(yr_i)
- 
+     
     i_dst   = d_dst.Dst
     month   = d_dst.month
     day     = d_dst.day
@@ -297,19 +289,10 @@ pro tec, r_tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
     DOY     = t_data.DOY
     fn = n_elements(DOY)
 ;###############################################################################   
-    ;tec_doy = t_data.doy
     tec     = t_data.tec
     med     = t_data.med
     dif_tec = tec-med
-;###############################################################################  
-    d_sym = sym_data([yr_i,mh_i,dy_i], [yr_f,mh_f,dy_f])
-    
-    sym_H = d_sym.SYM_H
-    ;print, sym_H
-   mlat = 28.10*!pi
-   ld = cos(mlat/180)
- ;  print, -sym_H*ld
- 
+;###############################################################################   
     doy_i = DOY[0]
     doy_f = DOY[fn-1]
         
@@ -324,32 +307,6 @@ pro tec, r_tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
      
     Date    = string(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, $
     FORMAT  ='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')     
-    
-    
-;###############################################################################
-; define important Dst values
-;###############################################################################
-;print, 'min value of Dst'
-;print, min(dst)
- 
-;print, 'max value of Dst'
-;print, max(dst)
-
-;print, 'min values of Dst'
-i = where(dst lt -150, dst_icount)
-;print, dst[i]
-;print, hour[i]
-
-;print, 'max values of Dst'
-j = where(dst gt max(dst)-10, dst_jcount)
-;print, dst[j]
-
-caldat, time_w, mh_tmp, dy_tmp, yr_tmp, hr_tmp
-for i=0, dst_icount-1 do begin
-    ;print, month[i], day[i],$
-    ;format='(I02, "-", I02)'    
-endfor   	
-
 ;###############################################################################
 ; define DH variables
 ;###############################################################################
@@ -376,11 +333,7 @@ endfor
                 PRINT, FORMAT="('                missing GMS_YYYYMMDD.k_index.',A,' impossible to plot all data.')"              
         ENDIF
 
-;        fecha = string(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, format = '(I4,I02,I02,"_",I4,I02,I02)')
-        H    = FLTARR(file_number*24)
-        
-        H_STDESV    = FLTARR(file_number*24)
-                       
+        H    = FLTARR(file_number*24)                       
         FOR i = 0, N_ELEMENTS(exist_data_file)-1 DO BEGIN
                 IF exist_data_file[i] EQ 1 THEN BEGIN
                         tmp_year    = 0
@@ -388,11 +341,8 @@ endfor
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
                         ;print, tmp_year, tmp_month, tmp_day
-                        dat = DH_teo([tmp_year, tmp_month, tmp_day])
-                        
-                        H[i*24:(i+1)*24-1] = dat.H[*]                                                
-                        H_STDESV[i*24:(i+1)*24-1] = dat.H_stdesv[*]
-                                                                                             
+                        dat = DH_teo([tmp_year, tmp_month, tmp_day])                        
+                        H[i*24:(i+1)*24-1] = dat.H[*]                                           
                 ENDIF ELSE BEGIN
                          H[i*24:(i+1)*24-1] = 999999.0
                          H_STDESV[i*24:(i+1)*24-1] = 999999.0                        
@@ -415,8 +365,7 @@ endfor
             if H[i] ge 100.0 then begin
                 H[where(H[*] ge 100.0)] = !Values.F_NAN          
             endif
-        endfor
-        
+        endfor        
     ;implementar una función de interpolación en caso de que el porcentaje de 
     ;nan sea muy bajo
     
@@ -426,8 +375,6 @@ endfor
     
     if nbaddata gt 0 then H_tmp[baddata] = interpol(H_tmp[H_exist], H_exist, baddata)
     H = H_tmp
-
-;###############################################################################
 ;###############################################################################
 ; define diurnal baseline
 ;###############################################################################  
@@ -454,8 +401,6 @@ endfor
                 endif 
             endfor
     endfor
-
-
 b_sq = where(Bsq eq 0, zcount, complement=val, ncomplement=valcount)
 
 Bsq      = Bsq[val]
@@ -467,45 +412,7 @@ Bsq      = Bsq[val]
    ld           = cos(mlat/180)
    p_a          = dst*ld
    baseline     = Bsq + p_a             
-        diono  = H-baseline
-;###############################################################################
-; define important DH values
-;###############################################################################
-;print, 'min value of DH'
-;print, min(H)
- 
-;print, 'max value of DH'
-;print, max(H)
-
-;print, 'min values of DH'
-i = where(H lt -150, H_icount)
-;print, H[i]
-;print, H[i]
-
-;print, 'max values of DH'
-j = where(H gt 10, H_jcount)
-;print, H[j]
-;print, hour[j]
-
-;###############################################################################
-; define important DH values
-;###############################################################################
-;print, 'min value of Diff_H'
-;print, min(diff_H)
- 
-;print, 'max value of  Diff_H'
-;print, max(diff_H)
-
-;print, 'min values of  Diff_H'
-
-;print, diff_H[i]
-;print, diff_H[i]
-
-;print, 'max values of  Diff_H'
-;j = where(diff_H gt 0, diff_jcount)
-;print, diff_H[j]
-;print, diff_H[j]               
-
+        diono  = H-baseline         
 ;###############################################################################
 ; define ip parameters
 ;###############################################################################  
@@ -577,8 +484,6 @@ AU      = AU[val_AU]
         SET_PLOT, 'Z'
         
         tmp_spam = 1
-        IF tw GT 7 THEN tmp_spam = 1.5
-        IF tw GT 15 THEN tmp_spam = 2.
         
         Xsize=fix(800*tmp_spam)
         Ysize=800
@@ -629,7 +534,7 @@ AU      = AU[val_AU]
 ;###############################################################################
 ; Plot data
 ;###############################################################################
-    plot_title = 'Dst and DH index'   
+    plot_title = 'Perturbación Ionosférica asociada a la TGM'   
 
     if max(dst) gt max(H) then up = max(dst) else up = max(H)
     if min(dst) lt min(H) then down = min(dst) else down = min(H)
