@@ -14,7 +14,7 @@ import pandas as pd
 from datetime import datetime
 import re
 import os
-################################################################################
+################################################################################ 
 #introducimos la ventana de tiempo que abarca el archivo original y que está 
 #indicada en el nombre del mismo
 idate = input("format code:\n (yyyy-mm-dd): ")
