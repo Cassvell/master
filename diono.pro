@@ -28,31 +28,18 @@
 ;
 ;output files:
 ;
-function tec_data, i_date, f_date
-
+function tec_data, idate
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
-	iyear	= i_date[0]
-	imonth	= i_date[1]
-	iday 	= i_date[2]	
-
-	fyear	= f_date[0]
-	fmonth	= f_date[1]
-	fday 	= f_date[2]	
+	iyear	= idate[0]
+	imonth	= idate[1]
+	iday 	= idate[2]		
 
         header = 1      ; Defining number of lines of the header 
-	;	file = DIALOG_PICKFILE(FILTER='*.dat')
-
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-;reading data files
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 
         idate = string(iyear, imonth, iday, format = '(I4, "-", I02, "-", I02)')
-        fdate = string(fyear, fmonth, fday, format = '(I4, "-", I02, "-", I02)')
-
-		file_name = '../rutidl/tec/tec_newformat/'+'tec_'+idate+'_'+fdate+'.txt'
-
+		file_name = '../rutidl/tec/tec_newformat/'+'tec_'+idate+'.txt'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -66,20 +53,11 @@ function tec_data, i_date, f_date
 		CLOSE, lun
 		FREE_LUN, lun
 
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-        DStruct = {doy : 0., tec : 0., med : 0.}                                   
-
-		r_tec = REPLICATE(DStruct, number_of_lines-header)	
-        ;print, number_of_lines-header-1, number_of_lines-header+1
-
-       
+        DStruct = {doy : 0, tec : 0., med : 0.}                                   
+		r_tec = REPLICATE(DStruct, number_of_lines-header)	      
 		READS, data[header:number_of_lines-1], r_tec, $
-	format='(F5, X, F5, X, F6)'	
-	
+	format='(F3, X, F5, X, F5)'		
 		return, r_tec
-
 end
 
 function dst_data, initial
@@ -129,7 +107,6 @@ function dst_data, initial
 end
 
 function DH_teo, date
-
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
@@ -164,10 +141,10 @@ function DH_teo, date
 		teo_mag = REPLICATE(DStruct, number_of_lines)	
   
 		READS, data[0:number_of_lines-1], teo_mag, $
-		FORMAT='(I2, F10, F8, F10, F10, F10, F10, F10, F10, F10, F10)'
-		
+		FORMAT='(I2, F10, F8, F10, F10, F10, F10, F10, F10, F10, F10)'		
 		return, teo_mag		
 end
+
 
 function ip_data, date
 	On_error, 2
@@ -198,10 +175,6 @@ function ip_data, date
 		CLOSE, lun
 		FREE_LUN, lun
 
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-
         DStruct = {YEAR : 0, DOY : 0, hour : 0, bartels : 0, id_ifm : 0, $
                       id_sw : 0, n_points_ifm: 0, n_points_plasna : 0, B_esc : 0., $
                       B_vec : 0., B_lat : 0., B_long : 0., Bx : 0., By : 0., Bz : 0., $
@@ -220,11 +193,10 @@ function ip_data, date
 		READS, data[header:number_of_lines-1], r_ip, $
 FORMAT='(I4,I4,I3,I5,I3,I3,I4,I4,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,'+$
 'F9,F6,F6,F6,F6,F6,F9,F6,F6,F6,F6,F6,F6,F7,F7,F6,F5,F7,I3,I4,I6,I4,F6,I5,'+$
-'I6,I6,F6,F9,F10,F9,F9,F9,F9,F9,I3)'
-		
+'I6,I6,F6,F9,F10,F9,F9,F9,F9,F9,I3)'		
 		return, r_ip
-
 end
+
 
 function baseline_sq, date
 	On_error, 2
@@ -248,23 +220,84 @@ function baseline_sq, date
 		readf, lun, data, FORMAT = '(A)'
 		CLOSE, lun
 		FREE_LUN, lun
-
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+		
         DStruct = {year : 0, month : 0, day : 0, hour : 0, doy : 0, Bsq : 0.}                                   
 
 		B_sq = REPLICATE(DStruct, number_of_lines-header)	
-        ;print, number_of_lines-header-1, number_of_lines-header+1
-
-       
 		READS, data[header:number_of_lines-1], B_sq, $
-	 format='(I4,X, I02,X, I02, 2X, I02, 2X, I03, 2X, F08.4)' 	
-	
+	 format='(I4,X, I02,X, I02, 2X, I02, 2X, I03, 2X, F08.4)' 		
 		return, B_sq
 end
 
-pro tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
+
+function Date2DOY, idate
+;	Check data type of input set ascII flag and convert to yy,mm,dd:
+	info = SIZE(idate)
+	IF (info(0) eq 0) THEN BEGIN
+	  scalar = 1				;scalar flag set
+	ENDIF ELSE BEGIN
+	  scalar = 0				;vector input
+	ENDELSE
+
+	IF (info(info(0) + 1) eq 7) THEN BEGIN
+	  ascII = 1				;ascII input flag set
+	  yy = FIX(STRMID(idate,0,2))		;extract year
+	  mm = FIX(STRMID(idate,2,2))		;extract month
+	  dd = FIX(STRMID(idate,4,2))		;extract day
+	ENDIF ELSE BEGIN			;should be a longWord
+	  ascII = 0				;non-ascII input
+	  sdate = STRTRIM(STRING(idate),2)	;convert to string 
+	  yy = FIX(STRMID(sdate,0,2))		;extract year
+	  mm = FIX(STRMID(sdate,2,2))		;extract month
+	  dd = FIX(STRMID(sdate,4,2))		;extract day
+	ENDELSE
+
+;	Check for leap year and compute DOY:
+;       	      J   F   M   A   M   J   J   A   S   O   N   D
+	imonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+	IF (scalar) THEN BEGIN			;scalar input
+	  IF ((yy MOD 4) eq 0) THEN BEGIN	;leap year
+	    imonth(2) = 29			;set feb
+	  ENDIF
+	  DOY = FIX( TOTAL(imonth(0:mm-1)) ) + dd
+	ENDIF ELSE BEGIN
+	  DOY = dd				;set correct len on vector
+	  leapYrs = WHERE( (yy MOD 4) eq 0)	;index of leap years
+	  nonLeap = WHERE( (yy MOD 4) ne 0)	;index of non-leap years
+	  IF (nonLeap(0) ne -1) THEN BEGIN
+	    FOR i=0, N_elements(nonLeap)-1 DO BEGIN
+	      DOY(nonLeap(i)) = FIX( TOTAL(imonth(0:mm(nonLeap(i))-1)) ) + $
+				dd(nonLeap(i))
+	    ENDFOR
+	  ENDIF
+	  IF (leapYrs(0) ne -1) THEN BEGIN
+	    imonth(2) = 29			;set feb
+	    FOR i =0, N_elements(leapYrs)-1 DO BEGIN
+	      DOY(leapYrs(i)) = FIX( TOTAL(imonth(0:mm(leapYrs(i))-1)) ) + $
+				dd(leapYrs(i))
+	    ENDFOR
+	  ENDIF
+	ENDELSE
+
+	IF (N_PARAMS() EQ 3) THEN BEGIN         ;pass year back to caller
+          IF (ascII) THEN BEGIN
+	    DOY = STRTRIM( STRING(DOY), 2)	;convert to string	    
+	    yr = STRTRIM( STRING(yy), 2)	;convert to string	  
+	  ENDIF ELSE BEGIN
+	    yr = yy	
+	  ENDELSE			
+	ENDIF ELSE BEGIN			;pass DOY only
+	  IF (ascII) THEN BEGIN
+	    DOY = STRTRIM( STRING(DOY), 2)	;convert to string
+	  ENDIF
+	ENDELSE
+	;print, uint(DOY)  
+	return, DOY
+	END
+
+
+pro diono, r_dst, r_ip, B_sq, date_i, date_f
 
 	On_error, 2
 	compile_opt idl2, HIDDEN
@@ -289,10 +322,6 @@ pro tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
     DOY     = t_data.DOY
     fn = n_elements(DOY)
 ;###############################################################################   
-    tec     = t_data.tec
-    med     = t_data.med
-    dif_tec = tec-med
-;###############################################################################   
     doy_i = DOY[0]
     doy_f = DOY[fn-1]
         
@@ -310,10 +339,13 @@ pro tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
 ;###############################################################################
 ; define DH variables
 ;###############################################################################
-        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
-        data_file_name = strarr(file_number)
-        string_date     = strarr(file_number)
-       
+       file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
+               
+        data_file_name_dh  = strarr(file_number)        
+        string_date_dh        = strarr(file_number)
+
+        data_file_name_tec  = strarr(file_number)        
+        string_date_tec        = strarr(file_number)        
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -321,34 +353,86 @@ pro tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
                 tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
-                string_date[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
-                data_file_name[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'
+                string_date_dh[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
+                string_date_tec[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4, "-", I02, "-", I02)')
+        
+                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date_dh[i]+'.dst.early'
+                data_file_name_tec[i] = '../rutidl/tec/tec_newformat/'+'tec_'+string_date_tec[i]+'.txt'
+		        file_dh = FILE_SEARCH(data_file_name_dh[i], COUNT=opened_files)
+		        file_tec = FILE_SEARCH(data_file_name_tec[i], COUNT=opened_files)
+		        
+	            IF opened_files NE N_ELEMENTS(file_dh) THEN begin
+	                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date_dh[i]+'.dst.early'    
+	            ENDIF
+	            
+	            IF opened_files NE N_ELEMENTS(file_tec) THEN begin
+	                data_file_name_tec[i] = '../rutidl/tec/tec_newformat/'+'tec_'+string_date_tec[i]+'.txt'
+	            ENDIF 	                            
         ENDFOR
 
-        exist_data_file   = FILE_TEST(data_file_name)
-        capable_to_plot   = N_ELEMENTS(where(exist_data_file EQ 1))
+        exist_data_file_dh   = FILE_TEST(data_file_name_dh)
+        capable_to_plot_dh   = N_ELEMENTS(where(exist_data_file_dh EQ 1))
 
-        IF capable_to_plot NE N_ELEMENTS(data_file_name) THEN BEGIN 
+        exist_data_file_tec   = FILE_TEST(data_file_name_tec)
+        capable_to_plot_tec   = N_ELEMENTS(where(exist_data_file_tec EQ 1))
+        
+        IF capable_to_plot_dh NE N_ELEMENTS(data_file_name_dh) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
-                PRINT, FORMAT="('                missing GMS_YYYYMMDD.k_index.',A,' impossible to plot all data.')"              
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.dh_index.',A,' impossible to plot all data.')"              
         ENDIF
 
+        IF capable_to_plot_tec NE N_ELEMENTS(data_file_name_tec) THEN BEGIN 
+                PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.tec_index.',A,' impossible to plot all data.')"              
+        ENDIF
+                        
         H    = FLTARR(file_number*24)                       
-        FOR i = 0, N_ELEMENTS(exist_data_file)-1 DO BEGIN
-                IF exist_data_file[i] EQ 1 THEN BEGIN
+        FOR i = 0, N_ELEMENTS(exist_data_file_dh)-1 DO BEGIN
+                IF exist_data_file_dh[i] EQ 1 THEN BEGIN
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
-                        READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        ;print, tmp_year, tmp_month, tmp_day
-                        dat = DH_teo([tmp_year, tmp_month, tmp_day])                        
-                        H[i*24:(i+1)*24-1] = dat.H[*]                                           
+                        READS, string_date_dh[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
+                        d_dh = DH_teo([tmp_year, tmp_month, tmp_day])
+                        
+                        H[i*24:(i+1)*24-1] = d_dh.H[*]
+                                                                                                                       
                 ENDIF ELSE BEGIN
-                         H[i*24:(i+1)*24-1] = 999999.0
-                         H_STDESV[i*24:(i+1)*24-1] = 999999.0                        
-
+                        H[i*24:(i+1)*24-1] = 999999.0
                 ENDELSE                
         ENDFOR
+        
+        tec  = fltarr(file_number*12)
+        med  = fltarr(file_number*12)
+        FOR i = 0, N_ELEMENTS(exist_data_file_tec)-1 DO BEGIN
+                IF exist_data_file_tec[i] EQ 1 THEN BEGIN
+                        tmp_year    = 0
+                        tmp_month   = 0
+                        tmp_day     = 0
+                        READS, string_date_tec[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,X,I02,X,I02)'
+                 
+                        d_tec = tec_data([tmp_year, tmp_month, tmp_day])
+                        
+                        tec[i*12:(i+1)*12-1] = d_tec.tec[*]
+                        med[i*12:(i+1)*12-1] = d_tec.med[*] 
+                ENDIF ELSE BEGIN
+                        tec[i*12:(i+1)*12-1] = 999.0
+                        med[i*12:(i+1)*12-1] = 999.0
+                ENDELSE                
+        ENDFOR
+
+        for i=0, n_elements(tec)-1 do begin
+            if tec[i] eq 999.0 then begin
+                tec[where(tec[*] eq 999.0)] = !Values.F_NAN          
+            endif
+        endfor    
+
+        for i=0, n_elements(med)-1 do begin
+            if med[i] eq 999.0 then begin
+                med[where(med[*] eq 999.0)] = !Values.F_NAN          
+            endif
+        endfor
+        
         i_nan1 = where(H eq 999999.0, ncount)
         i_nan2 = where(H gt 100.0, n2count)
         
@@ -371,10 +455,12 @@ pro tec, r_dst, r_ip, sym_mag, B_sq, date_i, date_f
     
     H_tmp   = H
     H_exist = where(finite(H_tmp), ngooddata, complement=baddata, ncomplement=nbaddata)
-    ; interpolate at the locations of the bad data using the good data
-    
+    ; interpolate at the locations of the bad data using the good data    
     if nbaddata gt 0 then H_tmp[baddata] = interpol(H_tmp[H_exist], H_exist, baddata)
-    H = H_tmp
+    H = H_tmp  
+;###############################################################################      
+    tec_days= findgen(tw*12)/12.0                        
+    tec_diff = tec-med    
 ;###############################################################################
 ; define diurnal baseline
 ;###############################################################################  
@@ -507,7 +593,7 @@ AU      = AU[val_AU]
         
     LOADCT, 39, /SILENT
 
-    path = '../rutidl/output/globfig_to_reg/'
+    path = '../rutidl/output/eventos_tgm/'
 ;###############################################################################
 ; Time label
 ;###############################################################################    
@@ -897,14 +983,14 @@ down_ae     = min(AL)
                 true_image[0,*,*] = reds[image]
                 true_image[1,*,*] = greens[image]
                 true_image[2,*,*] = blues[image]
-                write_jpeg, path+'mag_tec_V3_'+Date+'.jpg', True_Image, true=1
+                write_jpeg, path+'mag_tec_V1_'+Date+'.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'mag_tec_V3_'+Date+'.png', Image, reds,greens,blues
+                WRITE_PNG, path+'mag_tec_V1_'+Date+'.png', Image, reds,greens,blues
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'mag_tec_V3_'+Date+'.png'
+                print, '        Saving: '+path+'mag_tec_V1_'+Date+'.png'
                 print, ''
         ENDIF
         RETURN 	
