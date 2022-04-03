@@ -208,7 +208,7 @@ function baseline_sq, date
         date = string(yr, mh, format = '(I4, "-", I02)')
         header=0
 
-		file_name = '../rutidl/output/'+'Bsq_'+date+'.txt'
+		file_name = '../rutidl/output/Bsq_baselines/'+'Bsq_'+date+'.txt'
 	
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -315,23 +315,26 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
     hour    = d_dst.hour
     dst_doy = d_dst.DOY          
 ;###############################################################################   
+    d_dst = dst_data(yr_i)
+    t = n_elements(d_dst.year)    
+    i_dst = d_dst.Dst
+   
     year = d_dst.year
-    tiempo = TIMEGEN(n_elements(year), START=julday(mh_i, dy_i,  $
-                     year, 0), UNITS='Hours')  
+    tiempo = TIMEGEN(t, START=julday(d_dst.month[0], d_dst.day[0],  $
+                     d_dst.year[0], d_dst.hour[0]), UNITS='Hours')  
                                         
         iyear = strmid(string(yr_i, format='(I4)'),2,2)
         fyear = strmid(string(yr_f, format='(I4)'),2,2)
                 
         idoy      = Date2DOY(string(iyear, mh_i, dy_i,format = '(I02,I02,I02)'))
-        fdoy      = Date2DOY(string(fyear, mh_f, dy_f,format = '(I02,I02,I02)'))
-  
+        fdoy      = Date2DOY(string(fyear, mh_f, dy_f,format = '(I02,I02,I02)'))         
+            
+    time_w  = tiempo[idoy:fdoy]
     tw      = n_elements(time_w)
-    tot_days= findgen(tw*24)/24.0     
-    dst     = i_dst[(doy_i*24)-24:doy_f*24-1]
-    tec_days= findgen(tw*12)/12.0  
-     
-    Date    = string(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, $
-    FORMAT  ='(I4, "-", I02, "-", I02, "_", I4, "-", I02, "-", I02)')     
+    tot_days= findgen(tw*24)/24.0
+    
+    dst     = i_dst[(idoy*24)-24:fdoy*24-1]    
+    Date    = string(year[0], mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 ;###############################################################################
 ; define DH variables
 ;###############################################################################
@@ -456,7 +459,7 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
     H = H_tmp  
 ;###############################################################################      
     tec_days= findgen(tw*12)/12.0                        
-    tec_diff = tec-med    
+    dif_tec = tec-med    
 ;###############################################################################
 ; define diurnal baseline
 ;###############################################################################  
@@ -466,7 +469,7 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
     Bsq_ln   = sqline.Bsq
 
 
-    tmp_doy = dst_doy[(doy_i*24)-23:doy_f*24-1]
+    tmp_doy = dst_doy[(idoy*24)-23:fdoy*24-1]
     Bsq     = fltarr(n_elements(Bsq_ln))
     
     tmp_doy = tmp_doy[uniq(tmp_doy, sort(tmp_doy))]
@@ -509,7 +512,7 @@ Bsq      = Bsq[val]
     ip_AL   = ip.AL
     ip_AE   = ip.AE
 
-    tmp_doy = dst_doy[(doy_i*24)-24:doy_f*24-1]
+    tmp_doy = dst_doy[(idoy*24)-24:idoy*24-1]
     Ey      = fltarr(n_elements(ip_doy))
     p_dyn   = fltarr(n_elements(ip_doy))
     AE      = fltarr(n_elements(ip_doy))
@@ -602,7 +605,7 @@ AU      = AU[val_AU]
                 tmp_year    = 0
                 tmp_month   = 0
                 tmp_day     = 0
-                tmp_julday  = JULDAY(1, doy_i, yr_i)
+                tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 
