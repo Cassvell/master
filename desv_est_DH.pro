@@ -219,7 +219,7 @@ pro teo, date_i, date_f
       ;print, max(H_STDESV), min(H_STDESV)   
     sigma = TeXtoIDL('\sigmaH')
     dH    = TeXtoIDL('\DeltaH')
-    title = 'Standard deviation of '+dH+' para Octubre y Noviembre, 2003'                      
+    title = 'Desviación estandard ('+dH+') para Octubre y Noviembre, 2003'                      
     plot, time, H_STDESV, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=rojo,$
      CHARSIZE = 1.0, CHARTHICK=chr_thick1, POSITION=[0.07,0.15,0.95,0.90], $
      XSTYLE = 5, XTICKNAME=REPLICATE(' ', file_number+1), XRANGE=[0, file_number], $
