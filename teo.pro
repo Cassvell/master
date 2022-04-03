@@ -515,12 +515,8 @@ pro kmx_plot, date_i, date_f
 
         Device_bak = !D.Name 
         SET_PLOT, 'Z'
-        
-        tmp_spam = 1
-        IF file_number GT 7 THEN tmp_spam = 1.5
-        IF file_number GT 15 THEN tmp_spam = 2.
-        
-        Xsize=fix(800*tmp_spam)
+               
+        Xsize=fix(1200)
         Ysize=400
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
         DEVICE, z_buffering=O
@@ -568,8 +564,6 @@ pro kmx_plot, date_i, date_f
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 
 ;IF dt eq 'D' then plot_title = 'Definitive Planetary K index'
- 
-;if dt eq 'P' then plot_title = 'Provisional Planetary K index'
 
 time_title = 'Time window begin: '+string(yr_i, mh_i, dy_i, $
                 FORMAT='(I4, "/", I02, "/", I02)')+' 00:00 UTC'

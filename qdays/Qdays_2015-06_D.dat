@@ -1,0 +1,46 @@
+ Format                 IAGA-2002                                    |
+ Source of Data         GFZ, Helmholtz-Zentrum Postdam, Germany      |
+ Station Name           Q-Days & D-Days events                       |
+ IAGA CODE              Q-Days                                       |
+ Geodetic Latitude                                                   |
+ Geodetic Longitude                                                  |
+ Elevation                                                           |
+ Reported               Q-Days, D-Days                               |
+ Sensor Orientation                                                  |
+ Digital Sampling                                                    |
+ Data Interval Type     10 Q-Days & 5 D-days per month               |
+ Data Type              Definitive                                   |
+ # Converted to IAGA2002 format by the International Service of      |
+ #  Geomagnetic indices (ISGI, http://isgi.unistra.fr).              |
+ # The values for Q-Days, Q1-Q10, are the order number of the ten    |
+ #  quietest days of the month. A selected quiet day is considered   |
+ #  not really quiet and is:                                         |
+ #   marked by the letter "A" if (Ap >  6);                          |
+ #   marked by the letter "K" if (Ap <= 6), or if one(Kp > 3),       |
+ #   or two(Kp > 2+).                                                |
+ # The values for D-Days, D1-D5, are the order number of the five    |
+ #  most disturbed days of the month. A selected disturbed day is    |
+ #  considered not really disturbed and marked by "*" if (Ap < 20).  |
+ #                                                                   |
+ # License: CC BY                                                    |
+ #          https://creativecommons.org/licenses/by/4.0/             |
+ #                                                                   |
+ # For more information on Q-Days & D-Days events, please visit      |
+ #  GFZ "Indices of Global Geomagnetic Activity" service website:    |
+ #  http://www.gfz-potsdam.de/Kp-index/                              |
+DATE       TIME         DOY DAYS                                     |
+2015-06-02 00:00:00.000 153 Q3 
+2015-06-03 00:00:00.000 154 Q5 
+2015-06-04 00:00:00.000 155 Q4 
+2015-06-05 00:00:00.000 156 Q2 
+2015-06-06 00:00:00.000 157 Q7 
+2015-06-08 00:00:00.000 159 D3 
+2015-06-12 00:00:00.000 163 Q10 
+2015-06-14 00:00:00.000 165 D5*
+2015-06-19 00:00:00.000 170 Q6 
+2015-06-20 00:00:00.000 171 Q1 
+2015-06-22 00:00:00.000 173 D2 
+2015-06-23 00:00:00.000 174 D1 
+2015-06-25 00:00:00.000 176 D4 
+2015-06-29 00:00:00.000 180 Q8 
+2015-06-30 00:00:00.000 181 Q9 
