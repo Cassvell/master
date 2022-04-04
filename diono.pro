@@ -512,7 +512,8 @@ Bsq      = Bsq[val]
     ip_AL   = ip.AL
     ip_AE   = ip.AE
 
-    tmp_doy = dst_doy[(idoy*24)-24:idoy*24-1]
+    tmp_doy = dst_doy[(idoy*24)-24:fdoy*24-1]
+    print, dst_doy    
     Ey      = fltarr(n_elements(ip_doy))
     p_dyn   = fltarr(n_elements(ip_doy))
     AE      = fltarr(n_elements(ip_doy))
@@ -520,7 +521,6 @@ Bsq      = Bsq[val]
     AU      = fltarr(n_elements(ip_doy))
         
     tmp_doy = tmp_doy[uniq(tmp_doy, sort(tmp_doy))]
-   ; print, tmp_doy
     
     ;tmp_doy2= intarr(n)
     for i=0, n_elements(tmp_doy)-1 do begin
@@ -624,14 +624,12 @@ AU      = AU[val_AU]
     if max(dst) gt max(H) then up = max(dst) else up = max(H)
     if min(dst) lt min(H) then down = min(dst) else down = min(H)
     
-window_title = 'from '+string(yr_i, mh_i, dy_i, $
-                FORMAT='(I4, "/", I02, "/", I02)')+' to '$
+window_title = 'De '+string(yr_i, mh_i, dy_i, $
+                FORMAT='(I4, "/", I02, "/", I02)')+' a '$
                 +string(yr_f, mh_f, dy_f, $
                 FORMAT='(I4, "/", I02, "/", I02)')
 
-time_title = ' Time  [UT]'                
-                
-MAG_source = 'Source: International Service of Geomagnetic Indices'  
+time_title = ' Tiempo universal (UT) en días.'                                 
         
     plot, tot_days, H, XTICKS=tw, xminor = 8, POSITION=[0.07,0.83,0.95,0.95],$
     XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, YRANGE=[down, up],$
@@ -929,7 +927,6 @@ down_ae     = min(AL)
     endif else begin
         for i = 0., 50., 5. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
     endelse 
-
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
                          XMINOR=8, $
