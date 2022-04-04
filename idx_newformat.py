@@ -17,7 +17,7 @@ import os
 ################################################################################ 
 #introducimos la ventana de tiempo que abarca el archivo original y que está 
 #indicada en el nombre del mismo
-file_type=input("select file type option:\n dst: \n kp: \n sym: \n or ip: ") 
+file_type=input("select file type option:\n dst: \n kp: \n sym: \n or \n ip: ") 
 #selección del tipo de archivo de acuerdo al índice geomagnético de interés
 
 if file_type != 'ip':
@@ -77,8 +77,7 @@ elif file_type == 'kp':
 
 elif file_type == 'ip':        
     if os.path.isfile(path+idate+'.dat'):
-        file_type = 'ip'  
-        head    = 58               
+        file_type = 'ip'           
         
 elif file_type == 'sym':
     sample=input('chose sample rate: \n h or m: ')
@@ -123,8 +122,7 @@ if file_type == 'dst' or file_type == 'kp':
     df = df.drop(columns=['|'])
     
 elif file_type == 'ip':
-    df = pd.read_csv(path+idate+'.dat', \
-                     header=head, delim_whitespace=True)    
+    df = pd.read_csv(path+idate+'.dat', header=None,  sep='\s+')    
 
 else:
     df = pd.read_csv(path+code_name+'_'+idate+'_'+fdate+code_stat+'.dat', \
@@ -145,7 +143,7 @@ idx = 0     #vector de tiempo a generar
 step = 0    #indica la tasa de muestreo, dependiendo del índice geomagnético 
             #seleccionado
             
-if file_type == 'dst' or 'ip':
+if file_type == 'dst':
     enddata = fdate+ ' 23:00:00'
     idx = pd.date_range(start = pd.Timestamp(idate), \
                         end = pd.Timestamp(enddata), freq='H')
@@ -170,25 +168,42 @@ elif file_type == 'sym':
         idx = pd.date_range(start = pd.Timestamp(idate), \
                         end = pd.Timestamp(enddata), freq='T')
         step=1440
-        fhour=1439                         
+        fhour=1439
+
+elif file_type == 'ip':
+    year = df.iloc[:,0]
+    doy  = df.iloc[:,1]   
+    #la primer columna es el año, la segunda es el DOY. 
+    df['combined'] = df.iloc[:, 0]*1000 + df.iloc[:,1] 
+    #obtenemos una columna para la fecha
+    df["dt"] = pd.to_datetime(df["combined"], format = "%Y%j") 
+    dt = df.iloc[:, 58]
+    idate = dt[0]
+    fdate = dt[236]
+    fdate = str(fdate)
+    fdate = fdate[0:10]  
+    enddata = fdate+ ' 23:00:00'      
+    idx = pd.date_range(start = pd.Timestamp(idate), \
+                        end = pd.Timestamp(enddata), freq='H')
+    step=24
+    fhour=23                                                     
 else:
     print('try with another sample rate')      
 
-
 df = df.set_index(idx)
-df = df.drop(columns=['DATE', 'TIME'])
-df = df.reset_index()
+
+if file_type != 'ip':
+    df = df.drop(columns=['DATE', 'TIME'])
+
+df = df.reset_index()    
                   
-#print(df)                 
-#en este bucle, se generan los archivos por cada día y se guardan en la dir 
-#indicada.
 for i in range(0,len(idx),step):
     mask = (df['index'] >= idx[i]) & (df['index'] <= idx[i+fhour])
     df_new = df[mask]
     date = str(idx[i])
     date = date[0:10]
     
-    if file_type == 'dst' or file_type == 'kp' or file == 'ip':
+    if file_type == 'dst' or file_type == 'kp' or file_type == 'ip':
         name_new = file_type+'_'+date+'.txt'
         new_path = '/home/c-isaac/Escritorio/proyecto/tormentas-list/rutidl/'+\
         file_type+'/daily/'
