@@ -17,14 +17,14 @@ import os
 ################################################################################ 
 #introducimos la ventana de tiempo que abarca el archivo original y que está 
 #indicada en el nombre del mismo
+file_type=input("select file type:\n(dst, kp, sym or ip): ") #selección del tipo de
+#archivo de acuerdo al índice geomagnético de interés
+
 idate = input("format code:\n (yyyy-mm-dd): ")
 fdate = input("format code:\n (yyyy-mm-dd): ")
 
 code_stat = 'D' #código que indica el estado de los archivos, D, P o Q
                 #(Definitivos, Provisionales o Rápidos)
-
-file_type=input("select file type:\n(dst, kp or sym): ") #selección del tipo de
-#archivo de acuerdo al índice geomagnético de interés
 
 path='/home/c-isaac/Escritorio/proyecto/tormentas-list/rutidl/'+file_type+'/'
 
@@ -71,7 +71,12 @@ elif file_type == 'kp':
         file_type = 'kp'
         code_name = 'Kp' 
         head    = 35
-    
+
+elif file_type == 'ip':        
+    if os.path.isfile(path+idate+'.dat'):
+        file_type = 'ip'  
+        head    = 58               
+        
 elif file_type == 'sym':
     sample=input('chose sample rate: \n h or m: ')
     
@@ -113,6 +118,10 @@ if file_type != 'sym':
     df = pd.read_csv(path+code_name+'_'+idate+'_'+fdate+'_'+code_stat+'.dat', \
                      header=head, delim_whitespace=True)
 
+elif file_type == 'ip'
+    df = pd.read_csv(path+'_'+idate+'.dat', \
+                     header=head, delim_whitespace=True)    
+
 else:
     df = pd.read_csv(path+code_name+'_'+idate+'_'+fdate+code_stat+'.dat', \
                      header=head, delim_whitespace=True)
@@ -132,7 +141,7 @@ idx = 0     #vector de tiempo a generar
 step = 0    #indica la tasa de muestreo, dependiendo del índice geomagnético 
             #seleccionado
             
-if file_type == 'dst':
+if file_type == 'dst' or 'ip':
     enddata = fdate+ ' 23:00:00'
     idx = pd.date_range(start = pd.Timestamp(idate), \
                         end = pd.Timestamp(enddata), freq='H')
