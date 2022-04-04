@@ -122,7 +122,7 @@ if file_type == 'dst' or file_type == 'kp':
     df = df.drop(columns=['|'])
     
 elif file_type == 'ip':
-    df = pd.read_csv(path+idate+'.dat', header=None,  sep='\s+')    
+    df = pd.read_csv(path+file_type+'_'+idate+'.dat', header=None,  sep='\s+')    
 
 else:
     df = pd.read_csv(path+code_name+'_'+idate+'_'+fdate+code_stat+'.dat', \
@@ -179,7 +179,7 @@ elif file_type == 'ip':
     df["dt"] = pd.to_datetime(df["combined"], format = "%Y%j") 
     dt = df.iloc[:, 58]
     idate = dt[0]
-    fdate = dt[236]
+    fdate = dt[len(dt)-1]
     fdate = str(fdate)
     fdate = fdate[0:10]  
     enddata = fdate+ ' 23:00:00'      
