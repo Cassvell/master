@@ -17,11 +17,14 @@ import os
 ################################################################################ 
 #introducimos la ventana de tiempo que abarca el archivo original y que está 
 #indicada en el nombre del mismo
-file_type=input("select file type:\n(dst, kp, sym or ip): ") #selección del tipo de
-#archivo de acuerdo al índice geomagnético de interés
+file_type=input("select file type option:\n dst: \n kp: \n sym: \n or ip: ") 
+#selección del tipo de archivo de acuerdo al índice geomagnético de interés
 
-idate = input("format code:\n (yyyy-mm-dd): ")
-fdate = input("format code:\n (yyyy-mm-dd): ")
+if file_type != 'ip':
+    idate = input("format code:\n (yyyy-mm-dd): ")
+    fdate = input("format code:\n (yyyy-mm-dd): ")
+else:
+     idate = input("format code:\n (yyyy-mm-dd): ")
 
 code_stat = 'D' #código que indica el estado de los archivos, D, P o Q
                 #(Definitivos, Provisionales o Rápidos)
@@ -114,19 +117,20 @@ else:
 ################################################################################   
 #generación del DataFrame
 
-if file_type != 'sym':
+if file_type == 'dst' or file_type == 'kp':
     df = pd.read_csv(path+code_name+'_'+idate+'_'+fdate+'_'+code_stat+'.dat', \
                      header=head, delim_whitespace=True)
-
-elif file_type == 'ip'
-    df = pd.read_csv(path+'_'+idate+'.dat', \
+    df = df.drop(columns=['|'])
+    
+elif file_type == 'ip':
+    df = pd.read_csv(path+idate+'.dat', \
                      header=head, delim_whitespace=True)    
 
 else:
     df = pd.read_csv(path+code_name+'_'+idate+'_'+fdate+code_stat+'.dat', \
                      header=head, delim_whitespace=True)
-                     
-df = df.drop(columns=['|'])
+    df = df.drop(columns=['|'])                                          
+
 ################################################################################
 ################################################################################
 #fragmentación del archivo original en varios archivos con un día de ventana de
@@ -184,7 +188,7 @@ for i in range(0,len(idx),step):
     date = str(idx[i])
     date = date[0:10]
     
-    if file_type == 'dst' or file_type == 'kp':
+    if file_type == 'dst' or file_type == 'kp' or file == 'ip':
         name_new = file_type+'_'+date+'.txt'
         new_path = '/home/c-isaac/Escritorio/proyecto/tormentas-list/rutidl/'+\
         file_type+'/daily/'
