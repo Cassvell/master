@@ -146,56 +146,6 @@ function DH_teo, date
 end
 
 
-function ip_data, date
-	On_error, 2
-	compile_opt idl2, HIDDEN
-
-	year	= date[0]
-	month	= date[1]	
-
-        header = 60      ; Defining number of lines of the header 
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-;reading data files
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-
-        date = string(year, month, format = '(I4, "-", I02)')
-		
-		file_name = '../rutidl/ip/'+date+'.dat'
-		
-		file = FILE_SEARCH(file_name, COUNT=opened_files)
-		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
-
-		number_of_lines = FILE_LINES(file)
-	   ; print, number_of_lines
-		data = STRARR(number_of_lines)
-
-		openr, lun, file, /GET_LUN, ERROR=err
-		readf, lun, data, FORMAT = '(A)'
-		CLOSE, lun
-		FREE_LUN, lun
-
-        DStruct = {YEAR : 0, DOY : 0, hour : 0, bartels : 0, id_ifm : 0, $
-                      id_sw : 0, n_points_ifm: 0, n_points_plasna : 0, B_esc : 0., $
-                      B_vec : 0., B_lat : 0., B_long : 0., Bx : 0., By : 0., Bz : 0., $
-                      By0 : 0., Bz0 : 0., B_rms_esc : 0., B_rms_vec : 0., Bx_rms : 0., $
-                      By_rms : 0., Bz_rms : 0., Temp : 0., density_p : 0., v_p : 0., $
-                      flow_long : 0., flow_lat : 0., alfa_prot : 0., sigma_T : 0., $
-                      sigma_n : 0., sigma_v : 0., sigma_phi : 0., sigma_theta : 0., $
-                      sigma_ratio : 0., flow_P : 0., E : 0., beta_p : 0., alfven_M : 0., $
-                      mag_M : 0., q_invariant : 0., kp : 0, R : 0, dst : 0, ap : 0, $
-                      f10_idx : 0., AE : 0, AL : 0, AU : 0, pc_idx : 0., lyman_alfa : 0.,$
-                      p_flux_1MeV : 0., p_flux_2MeV : 0., p_flux_4MeV : 0., p_flux_10MeV : 0.,$
-                      p_flux_30MeV : 0., p_flux_60MeV : 0., flux_FLAG : 0}
-                                      
-
-		r_ip = REPLICATE(DStruct, number_of_lines-header)	
-		READS, data[header:number_of_lines-1], r_ip, $
-FORMAT='(I4,I4,I3,I5,I3,I3,I4,I4,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,'+$
-'F9,F6,F6,F6,F6,F6,F9,F6,F6,F6,F6,F6,F6,F7,F7,F6,F5,F7,I3,I4,I6,I4,F6,I5,'+$
-'I6,I6,F6,F9,F10,F9,F9,F9,F9,F9,I3)'		
-		return, r_ip
-end
-
 
 function baseline_sq, date
 	On_error, 2
@@ -296,11 +246,11 @@ function Date2DOY, idate
 	END
 	
 	
-pro iono_resp, r_dst, r_ip, B_sq, date_i, date_f 
+pro iono_resp, r_dst, B_sq, DOY, date_i, date_f 
 
 	On_error, 2
 	compile_opt idl2, HIDDEN
-    ;print, t
+
 
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
@@ -309,7 +259,21 @@ pro iono_resp, r_dst, r_ip, B_sq, date_i, date_f
 	yr_f	= date_f[0]
 	mh_f	= date_f[1]
 	dy_f 	= date_f[2]
-
+;###############################################################################
+;###############################################################################
+idate0 = string(yr_i, mh_i, format='(I4,I02)')
+TGM_n = idate0
+case TGM_n of
+    '200311' : TGM_n = 1
+    '200411' : TGM_n = 2
+    '200505' : TGM_n = 3
+    '201503' : TGM_n = 4
+    '201705' : TGM_n = 5
+    '201709' : TGM_n = 6
+    else: print, 'fuera de rango'
+endcase  
+;###############################################################################
+;###############################################################################
     d_dst = dst_data(yr_i)     
     i_dst   = d_dst.Dst
     hour    = d_dst.hour
@@ -451,12 +415,13 @@ pro iono_resp, r_dst, r_ip, B_sq, date_i, date_f
         endfor        
     ;implementar una función de interpolación en caso de que el porcentaje de 
     ;nan sea muy bajo
-    
+       
     H_tmp   = H
     H_exist = where(finite(H_tmp), ngooddata, complement=baddata, ncomplement=nbaddata)
-    ; interpolate at the locations of the bad data using the good data    
+    ; interpolate at the locations of the bad data using the good data
+    
     if nbaddata gt 0 then H_tmp[baddata] = interpol(H_tmp[H_exist], H_exist, baddata)
-    H = H_tmp  
+    H = H_tmp
 ;###############################################################################      
     tec_days= findgen(tw*12)/12.0                        
     dif_tec = tec-med    
@@ -470,7 +435,7 @@ pro iono_resp, r_dst, r_ip, B_sq, date_i, date_f
     Bsq_ln   = sqline.Bsq
 
 
-    tmp_doy = dst_doy[(doy_i*24)-23:doy_f*24-1]
+    tmp_doy = dst_doy[(idoy*24)-24:fdoy*24-1]
     Bsq     = fltarr(n_elements(Bsq_ln))
     
     tmp_doy = tmp_doy[uniq(tmp_doy, sort(tmp_doy))]
@@ -487,20 +452,17 @@ pro iono_resp, r_dst, r_ip, B_sq, date_i, date_f
                 endif 
             endfor
     endfor
-
-
 b_sq = where(Bsq eq 0, zcount, complement=val, ncomplement=valcount)
 
 Bsq      = Bsq[val]
 ;###############################################################################
-; define time window
+; define frequencies
 ;###############################################################################  
-
-   mlat         = 28.10*!pi
+   mlat         = 28.06*!pi
    ld           = cos(mlat/180)
    p_a          = dst*ld
    baseline     = Bsq + p_a             
-        diono  = H-baseline
+        diono   = H-baseline
     n           = n_elements(diono) 
 time = 3600.0
 
@@ -514,72 +476,58 @@ pws_s   = smooth(pws, 1)
 f_k     = (1+findgen(n))/(n*time)
 ;print, n_elements(f_k)
 print, 'Nyquist freq: ', fn, 'Hz'
+;###############################################################################
+; define pass band frequencies
+;###############################################################################  
+passband_l = idate0
+case passband_l of
+    '200311' : passband_l = 1.2e-5
+    '200411' : passband_l = 1.32e-5
+    '200505' : passband_l = 1.18e-5
+    '201503' : passband_l = 1.18e-5
+    '201705' : passband_l = 1.18e-5
+    '201709' : passband_l = 1.18e-5
+    else: print, 'fuera de rango'
+endcase  
 
+passband_u = idate0
+case passband_u of
+    '200311' : passband_u = 1.65e-5
+    '200411' : passband_u = 1.6e-5
+    '200505' : passband_u = 1.6e-5
+    '201503' : passband_u = 1.8e-5
+    '201705' : passband_u = 1.8e-5
+    '201709' : passband_u = 1.88e-5
+    else: print, 'fuera de rango'
+endcase  
+;###############################################################################
+; define high band frequencies
+;###############################################################################
+highpass_l = idate0
+case highpass_l of
+    '200311' : highpass_l = 8e-5
+    '200411' : highpass_l = 7.5e-5
+    '200505' : highpass_l = 7.3e-5
+    '201503' : highpass_l = 7.5e-5
+    '201705' : highpass_l = 7.5e-5
+    '201709' : highpass_l = 7.5e-5
+    else: print, 'fuera de rango'
+endcase
+;###############################################################################
+; define filtering
+;############################################################################### 
+coeff_ddyn    = digital_filter(passband_l/fn, passband_u/fn, 50, 18)
 
-
-
-coeff_ddyn    = digital_filter(0.086, 0.108, 50, 18)
-;print, n_elements(coeff_pb)
+coeff_dp2   = digital_filter(highpass_l/fn, 1.0, 50, 4)
+;###############################################################################
+; define disturbing effects
+;############################################################################### 
 ddyn        = convol(diono, coeff_ddyn, /edge_wrap)
 
-coeff_dp2   = digital_filter(0.51, 1.0, 50, 4)
-dp2         = convol(diono, coeff_dp2, /edge_wrap)
 
-sum_ddyn         = total((ddyn)^2) 
-ddyn_rms    = sqrt(sum_ddyn/float(n_elements(ddyn)))
+dp2         = convol(diono, coeff_dp2, /edge_wrap)  
 
-sum_dp2     = total(dp2)^2   
-dp2_rms     = sqrt(sum_dp2/float(n_elements(dp2)))
-print, dp2_rms
-arr_rms_ddyn    = fltarr(n_elements(ddyn))
-arr_rms_dp2     = fltarr(n_elements(dp2))
-
-arr_rms_ddyn[*] = ddyn_rms
-arr_rms_dp2[*]  = dp2_rms
-
-
-
-;###############################################################################
-; define device and color parameters 
-;###############################################################################      
-    ip = ip_data([yr_i, mh_i, dy_i])
-    
-    ip_year = ip.year
-    ip_doy  = ip.DOY
-    ip_hour = ip.hour
-    ip_AU   = ip.AU
-    ip_AL   = ip.AL
-    ip_AE   = ip.AE
-
-    tmp_doy = dst_doy[(doy_i*24)-24:doy_f*24-1]
-    AE      = fltarr(n_elements(ip_doy))
-    AL      = fltarr(n_elements(ip_doy))
-    AU      = fltarr(n_elements(ip_doy))
-        
-    tmp_doy = tmp_doy[uniq(tmp_doy, sort(tmp_doy))]
-   ; print, tmp_doy
-    
-    ;tmp_doy2= intarr(n)
-    for i=0, n_elements(tmp_doy)-1 do begin
-        ;print, tmp_doy[i]
-            for j=0, n_elements(ip_doy)-1 do begin
-           ; print, ip_doy[j]
-                if tmp_doy[i] eq ip_doy[j] then begin
-               ; ip_doy[j]   = tmp_doy[i]   
-               AE[j]       = ip_AE[j]
-               AL[j]       = ip_AL[j]
-               AU[j]       = ip_AU[j]                              
-                endif 
-            endfor
-    endfor
-aez = where(AE eq 0, zcount3, complement=val_AE, ncomplement=valcount)
-alz = where(AL eq 0, zcount4, complement=val_AL, ncomplement=valcount)
-auz = where(AU eq 0, zcount5, complement=val_AU, ncomplement=valcount)
-
-AE      = AE[val_AE]
-AL      = AL[val_AL]
-AU      = AU[val_AU]
-
+;print, ddyn, dp2
 ;###############################################################################
 ; define device and color parameters 
 ;###############################################################################      
@@ -613,14 +561,14 @@ AU      = AU[val_AU]
     LOADCT, 39, /SILENT
      X_label   = STRARR(tw+1)+' '
     ; print, n_elements(x_label)
-        months    = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        months    = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
         old_month = mh_i
        ; print, old_month
         FOR i =0,  N_ELEMENTS(X_label)-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
                 tmp_day     = 0
-                tmp_julday  = JULDAY(1, doy_i, yr_i)
+                tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 
@@ -629,15 +577,29 @@ AU      = AU[val_AU]
                 old_month = tmp_month
         ENDFOR 
         
-           
+case old_month of
+    1: old_month = 'Enero'
+    2: old_month ='Febrero'
+    3: old_month ='Marzo'
+    4: old_month ='Abril'
+    5: old_month ='Mayo'
+    6: old_month ='Junio'
+    7: old_month ='Julio'
+    8: old_month ='Agosto'
+    9: old_month ='Septiembre'
+    10:old_month ='Octubre'
+    11:old_month ='Noviembre'
+    12:old_month ='Diciembre'
+    else: print, 'fuera de rango'
+endcase             
             
-window_title =  string(yr_i, mh_i, dy_i, $
-                FORMAT='(I4, "/", I02, "/", I02)')+' to '$
-                +string(yr_f, mh_f, dy_f, $
-                FORMAT='(I4, "/", I02, "/", I02)')
+window_title = 'TGM'+ string(TGM_n, format='(I01)')+', '+ $
+                string(old_month, yr_i, format='(A, X, I4)')
 
-   ; periodo = 1/f_k
-    ;print, periodo             
+time_title = ' Tiempo universal (UT) en días.' 
+
+plot_title = 'Perturbación Ionosférica asociada a la TGM'   
+           
     plot, f_k, pws_s, /ylog, xrange = [1e-5, 1.38e-4], POSITION=[0.07,0.07,0.40,0.96],$
     yrange=[min(pws_s), max(pws_s)], BACKGROUND = blanco, color=negro, $
     CHARSIZE = chr_size1, xstyle=6, ystyle=6, subtitle='Ionospheric electric current disturbance (diono) PWS';,$
@@ -682,7 +644,7 @@ window_title =  string(yr_i, mh_i, dy_i, $
                          ystyle=2, $
                          CHARSIZE = 0.6;, $
 
-     
+    
      up = max(H)
      down=min(H)
      plot, tot_days, H, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
@@ -762,45 +724,7 @@ window_title =  string(yr_i, mh_i, dy_i, $
                          ystyle=2, $
                          CHARSIZE = 0.6;, $
                         ; CHARTHICK=chr_thick1;, $      
-                        
-     up_AE=max(AE)
-     down_AE=min(AE)          
-     plot, tot_days, AE, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
-     COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.50,0.43,0.95,0.60], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_AE,up_AE], /noerase
-     
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.6, $
-;                         CHARTHICK=chr_thick1, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKFORMAT='(A1)',$                         
-                         ;XTICKNAME=REPLICATE(' ', tw+1), $
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down_AE,up_AE], $
-                         YTITLE = 'AE [nT]', $                          
-                         COLOR=negro, $
-                         ystyle=2, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        
-        AXIS, YAXIS = 1, YRANGE=[down_AE,up_AE], $
-                         COLOR=negro, $
-                         ystyle=2, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $                              
+                                           
                 
     if max(ddyn) gt max(dp2) then up_p = max(ddyn) else up_p = max(dp2)
     if min(ddyn) lt min(dp2) then down_p = min(ddyn) else down_p = min(dp2)
@@ -811,9 +735,7 @@ window_title =  string(yr_i, mh_i, dy_i, $
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_p,up_p], /noerase
 
      oplot, tot_days, dp2, color=rojo
-     oplot, tot_days, arr_rms_ddyn, color=negro, linestyle=1
-     oplot, tot_days, arr_rms_dp2, color=negro, linestyle=2
-     oplot, tot_days, fltarr(n_elements(dp2)), color=negro, linestyle=3     
+    
 
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
@@ -889,37 +811,7 @@ window_title =  string(yr_i, mh_i, dy_i, $
                          COLOR=negro, $
                          CHARSIZE = 0.6;, $
                         ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]     
-
-;first panel legend
-        POLYFILL, [0.77,0.80,0.80,0.77], [0.808,0.808,0.810,0.810], color = azul, /NORMAL
-        POLYFILL, [0.86,0.89,0.89,0.86], [0.808,0.808,0.810,0.810], color = negro, /NORMAL        
-    if tw gt 7 then begin
-        XYOUTS, 0.777, 0.803 , /NORMAL, $
-                '        Dst index,                   DH index', COLOR=negro, $
-                CHARSIZE = chr_size1, $
-                CHARTHICK=chr_thick1         
-    endif else begin
-        XYOUTS, 0.764, 0.803 , /NORMAL, $
-                '        Dst index,         DH index', COLOR=negro, $
-                CHARSIZE = chr_size1, $
-                CHARTHICK=chr_thick1     
-    endelse
-    
-;third panel legend
-        POLYFILL, [0.77,0.80,0.80,0.77], [0.270,0.270,0.272,0.272], color = rojo, /NORMAL
-        POLYFILL, [0.86,0.89,0.89,0.86], [0.270,0.270,0.272,0.272], color = negro, /NORMAL        
-    if tw gt 7 then begin
-        XYOUTS, 0.777, 0.266 , /NORMAL, $
-                '        Dp2,                         Ddyn', COLOR=negro, $
-                CHARSIZE = chr_size1, $
-                CHARTHICK=chr_thick1         
-    endif else begin
-        XYOUTS, 0.764, 0.266 , /NORMAL, $
-                '        Dp2,               Ddyn', COLOR=negro, $
-                CHARSIZE = chr_size1, $
-                CHARTHICK=chr_thick1     
-    endelse
+;                         YRANGE=[down0,up0]    
  
 ;###############################################################################
 ; saving png
@@ -934,7 +826,7 @@ window_title =  string(yr_i, mh_i, dy_i, $
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 ; open the post stript device
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-    path = '../rutidl/output/globfig_to_reg/'
+    path = '../rutidl/output/eventos_tgm/'
         IF keyword_set(jpeg) THEN BEGIN
                 info = size(Image)
                 nx = info[1]
@@ -943,14 +835,14 @@ window_title =  string(yr_i, mh_i, dy_i, $
                 true_image[0,*,*] = reds[image]
                 true_image[1,*,*] = greens[image]
                 true_image[2,*,*] = blues[image]
-                write_jpeg, path+'diono_V3_'+Date+'.jpg', True_Image, true=1
+                write_jpeg, path+'iono_resp'+Date+'.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'diono_V3_'+Date+'.png', Image, reds,greens,blues
+                WRITE_PNG, path+'iono_resp'+Date+'.png', Image, reds,greens,blues
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'diono_V3_'+Date+'.png'
+                print, '        Saving: '+path+'iono_resp'+Date+'.png'
                 print, ''
         ENDIF
         RETURN 	
