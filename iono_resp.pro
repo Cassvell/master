@@ -539,7 +539,7 @@ dp2         = convol(diono, coeff_dp2, /edge_wrap)
         IF tw GT 15 THEN tmp_spam = 2.
         
         Xsize=fix(1600*tmp_spam)
-        Ysize=800
+        Ysize=1000
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
         DEVICE, z_buffering=O
         DEVICE, set_character_size = [10, 12]
@@ -600,56 +600,58 @@ time_title = ' Tiempo universal (UT) en días.'
 
 plot_title = 'Perturbación Ionosférica asociada a la TGM'   
            
-    plot, f_k, pws_s, /ylog, xrange = [1e-5, 1.38e-4], POSITION=[0.07,0.07,0.40,0.96],$
+    plot, f_k, pws_s, /xlog, /ylog, xrange = [min(f_k), fn], POSITION=[0.07,0.1,0.40,0.9],$
     yrange=[min(pws_s), max(pws_s)], BACKGROUND = blanco, color=negro, $
-    CHARSIZE = chr_size1, xstyle=6, ystyle=6, subtitle='Ionospheric electric current disturbance (diono) PWS';,$
+    CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='Ionospheric electric current disturbance (diono) PWS';,$
     ;title = 'Ionospheric electric current disturbance (diono) PWS'	 
 
-        AXIS, XAXIS = 0, XRANGE=[1e-5, 1.38e-4], $
+        AXIS, XAXIS = 0, XRANGE=[min(f_k), fn], $
+                         /xlog,$
                          ;XTICKS=f_k, $
                          ;XMINOR=8, $
-                         xstyle=2,$
+                         xstyle=1,$
                          ;XTICKNAME=X_label, $
                          xTITLE = 'frequencies [Hz]',$
                          COLOR=negro, $
-                         CHARSIZE = 0.6, $
+                         CHARSIZE = 1.0, $
 ;                        CHARTHICK=chr_thick1, $
                          TICKLEN=0.04
       
                          
-        AXIS, XAXIS = 1, XRANGE=[1e-5, 1.38e-4], $
+        AXIS, XAXIS = 1, XRANGE=[min(f_k), fn], $
+                         /xlog,$
                          ;XTICKS=periodo, $
                         ; XMINOR=8, $
                          ;XTICKFORMAT='(A1)',$
                          XTICKN=['', '5:33', '02:47', '01:51'],$
-                         xstyle=2,$
+                         xstyle=1,$
                          xTITLE = 'periods [hr]',$
                          ;XTICKNAME=X_label, $
-                         CHARSIZE = 0.6,$
+                         CHARSIZE = 1.0,$
                          COLOR=negro, $
                          TICKLEN=0.04                     
 
         AXIS, YAXIS = 0, yrange=[min(pws_s), max(pws_s)], $
                          YTITLE = 'Spectral component [nT]', $
-                         ystyle=2,$                          
+                         ystyle=1,$                          
                          COLOR=negro, $
                          /ylog,$
-                         CHARSIZE = 0.6;, $
+                         CHARSIZE = 1.0;, $
                         ; CHARTHICK=chr_thick1;, $
                          ;TICKLEN=0.00
                         
         AXIS, YAXIS = 1, yrange=[min(pws_s), max(pws_s)], $
                          COLOR=negro, $
                          /ylog,$
-                         ystyle=2, $
-                         CHARSIZE = 0.6;, $
+                         ystyle=1, $
+                         CHARSIZE = 1.0;, $
 
     
      up = max(H)
      down=min(H)
      plot, tot_days, H, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
-     POSITION=[0.50,0.79,0.95,0.96], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
+     POSITION=[0.50,0.73,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /noerase, title=window_title
      
      oplot, tot_days, dst, color=azul
@@ -660,12 +662,13 @@ plot_title = 'Perturbación Ionosférica asociada a la TGM'
                          XTICKFORMAT='(A1)',$
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 0.6, $
+                         CHARSIZE = 0.8, $
 ;                         CHARTHICK=chr_thick1, $
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=[0,tw], $
                          XTICKS=tw, $
+                         CHARSIZE = 0.8,$
                          XMINOR=8, $
                          XTICKFORMAT='(A1)',$                         
                          ;XTICKNAME=REPLICATE(' ', tw+1), $
@@ -676,37 +679,47 @@ plot_title = 'Perturbación Ionosférica asociada a la TGM'
                          YTITLE = 'Dst and DH [nT]', $                          
                          COLOR=negro, $
                          ystyle=2, $
-                         CHARSIZE = 0.6;, $
+                         CHARSIZE = 0.9;, $
                         ; CHARTHICK=chr_thick1;, $
                          ;TICKLEN=0.00
                         
         AXIS, YAXIS = 1, YRANGE=[down,up], $
                          COLOR=negro, $
                          ystyle=2, $
-                         CHARSIZE = 0.6;, $
+                         CHARSIZE = 0.9;, $
      
      
      up_diono=max(diono)
      down_diono=min(diono)          
      plot, tot_days, diono, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.50,0.61,0.95,0.78], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
+     POSITION=[0.50,0.49,0.95,0.66], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_diono,up_diono], /noerase
-     
+
+    up_diff = max(dif_tec) 
+    down_diff = min(dif_tec)  
+    plot, tec_days, dif_tec, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
+     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.50,0.49,0.95,0.66], $
+     XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
+     /noerase, YRANGE=[down_diff, up_diff],$
+     subtitle='time [UT]'
+
+       
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
                          XMINOR=8, $
                          XTICKFORMAT='(A1)',$
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 0.6, $
+                         CHARSIZE = 0.8, $
 ;                         CHARTHICK=chr_thick1, $
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=[0,tw], $
                          XTICKS=tw, $
                          XMINOR=8, $
-                         XTICKFORMAT='(A1)',$                         
+                         ;XTICKFORMAT='(A1)',$  
+                         CHARSIZE = 0.8, $                       
                          ;XTICKNAME=REPLICATE(' ', tw+1), $
                          COLOR=negro, $
                          TICKLEN=0.04
@@ -715,15 +728,16 @@ plot_title = 'Perturbación Ionosférica asociada a la TGM'
                          YTITLE = 'Diono [nT]', $                          
                          COLOR=negro, $
                          ystyle=2, $
-                         CHARSIZE = 0.6;, $
+                         CHARSIZE = 0.9;, $
                         ; CHARTHICK=chr_thick1;, $
                          ;TICKLEN=0.00
                         
         AXIS, YAXIS = 1, YRANGE=[down_diono,up_diono], $
                          COLOR=negro, $
                          ystyle=2, $
-                         CHARSIZE = 0.6;, $
+                         CHARSIZE = 0.9;, $
                         ; CHARTHICK=chr_thick1;, $      
+
                                            
                 
     if max(ddyn) gt max(dp2) then up_p = max(ddyn) else up_p = max(dp2)
@@ -731,7 +745,7 @@ plot_title = 'Perturbación Ionosférica asociada a la TGM'
                         
      plot, tot_days, ddyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.50,0.25,0.95,0.42], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
+     POSITION=[0.50,0.1,0.95,0.42], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_p,up_p], /noerase
 
      oplot, tot_days, dp2, color=rojo
@@ -759,7 +773,7 @@ plot_title = 'Perturbación Ionosférica asociada a la TGM'
                          ystyle=2, $  
                          YTITLE = 'Ddyn & Dp2 [nT]', $                          
                          COLOR=negro, $
-                         CHARSIZE = 0.6;, $
+                         CHARSIZE = 0.9;, $
                         ; CHARTHICK=chr_thick1;, $
                          ;TICKLEN=0.00
                         ;YRANGE=[down,up]
@@ -767,51 +781,10 @@ plot_title = 'Perturbación Ionosférica asociada a la TGM'
         AXIS, YAXIS = 1, yrange=[down_p,up_p], $ 
                          ystyle=2, $  
                          COLOR=negro, $
-                         CHARSIZE = 0.6;, $
+                         CHARSIZE = 0.9;, $
                         ; CHARTHICK=chr_thick1;, $    
 ;                         YRANGE=[down0,up0]      
 
-    up_diff = max(dif_tec) 
-    down_diff = min(dif_tec)  
-    plot, tec_days, dif_tec, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
-     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.50,0.07,0.95,0.24], $
-     XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
-     /noerase, YRANGE=[down_diff, up_diff],$
-     subtitle='time [UT]'
-
-
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         ;XTICKFORMAT='(A1)',$
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.6, $
-;                         CHARTHICK=chr_thick1, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKNAME=REPLICATE(' ', tw+1), $
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down_diff, up_diff], $
-                         ystyle=2, $  
-                         YTITLE = 'TECU diference', $                          
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        ;YRANGE=[down,up]
-                        
-        AXIS, YAXIS = 1, YRANGE=[down_diff, up_diff], $
-                         ystyle=2, $  
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]    
  
 ;###############################################################################
 ; saving png
