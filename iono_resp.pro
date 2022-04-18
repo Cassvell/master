@@ -423,8 +423,28 @@ endcase
     if nbaddata gt 0 then H_tmp[baddata] = interpol(H_tmp[H_exist], H_exist, baddata)
     H = H_tmp
 ;###############################################################################      
-    tec_days= findgen(tw*12)/12.0                        
-    dif_tec = tec-med    
+    tec_days= findgen(tw*12)/12.0                         
+    tec_diff = tec-med
+    
+    new_tecdays = findgen(tw*1440)/1440.0 ;se genera un arreglo de tiempo con 
+;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
+    
+    new_tecdiff = FLTARR(N_ELEMENTS(new_tecdays))     	
+    
+;    print, N_ELEMENTS(new_tecdays), N_ELEMENTS(new_tecdiff)
+    tmp_tecdif  = INTERPOL(tec_diff, N_ELEMENTS(new_tecdays))
+    new_tecdiff = tmp_tecdif
+;############################################################################### 
+    i_diff = dst-H
+    
+    new_dstdays = findgen(tw*1440)/1440.0 ;se genera un arreglo de tiempo con 
+;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
+    
+    new_idiff = FLTARR(N_ELEMENTS(new_dstdays))     	
+    
+;    print, N_ELEMENTS(new_tecdays), N_ELEMENTS(new_tecdiff)
+    tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(new_dstdays))
+    new_idiff = tmp_idiff  
 ;###############################################################################
 ;###############################################################################
 ; define diurnal baseline
@@ -524,10 +544,19 @@ coeff_dp2   = digital_filter(highpass_l/fn, 1.0, 50, 4)
 ;############################################################################### 
 ddyn        = convol(diono, coeff_ddyn, /edge_wrap)
 
-
 dp2         = convol(diono, coeff_dp2, /edge_wrap)  
-
-;print, ddyn, dp2
+;###############################################################################      
+    new_ddyn = FLTARR(N_ELEMENTS(new_dstdays))     	
+    
+    tmp_ddyn  = INTERPOL(ddyn, N_ELEMENTS(new_dstdays))
+    new_ddyn = tmp_ddyn           
+;###############################################################################
+;############################################################################### 
+    new_dp2 = FLTARR(N_ELEMENTS(new_dstdays))     	
+    
+    tmp_dp2  = INTERPOL(dp2, N_ELEMENTS(new_dstdays))
+    new_dp2 = tmp_dp2         
+;###############################################################################
 ;###############################################################################
 ; define device and color parameters 
 ;###############################################################################      
@@ -551,7 +580,7 @@ dp2         = convol(diono, coeff_dp2, /edge_wrap)
         amarillo  = 220
         verde     = 180
         negro     = 0
-        azul      = 80
+        azul      = 70
         blanco    = 255
         gris      = 130
         morado    = 16
@@ -592,55 +621,61 @@ case old_month of
     12:old_month ='Diciembre'
     else: print, 'fuera de rango'
 endcase             
-            
+
+;###############################################################################
+;###############################################################################
+       days = intarr(tw+1)
+       for i=0, n_elements(days)-1 do begin
+            days[i] = dy_i+i
+       endfor
+       days = days*24/24. 
+       day_time = findgen(24)
+;###############################################################################
+;###############################################################################            
 window_title = 'TGM'+ string(TGM_n, format='(I01)')+', '+ $
                 string(old_month, yr_i, format='(A, X, I4)')
 
-time_title = ' Tiempo universal (UT) en días.' 
+time_title = ' Tiempo universal (UT) en dias.' 
 
-plot_title = 'Perturbación Ionosférica asociada a la TGM'   
-           
+plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'   
+;###############################################################################
+;###############################################################################           
+    ysup = max(pws)+10
+    yinf = min(pws)-0.001
+    
     plot, f_k, pws_s, /xlog, /ylog, xrange = [min(f_k), fn], POSITION=[0.07,0.1,0.40,0.9],$
-    yrange=[min(pws_s), max(pws_s)], BACKGROUND = blanco, color=negro, $
-    CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='Ionospheric electric current disturbance (diono) PWS';,$
+    yrange=[yinf, ysup], BACKGROUND = blanco, color=negro, $
+    CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA
     ;title = 'Ionospheric electric current disturbance (diono) PWS'	 
+
+
+    oplot, f_k, pws_s, color=negro, thick=5
 
         AXIS, XAXIS = 0, XRANGE=[min(f_k), fn], $
                          /xlog,$
-                         ;XTICKS=f_k, $
-                         ;XMINOR=8, $
                          xstyle=1,$
-                         ;XTICKNAME=X_label, $
-                         xTITLE = 'frequencies [Hz]',$
+                         xTITLE = 'frecuencias [Hz]',$
                          COLOR=negro, $
                          CHARSIZE = 1.0, $
-;                        CHARTHICK=chr_thick1, $
                          TICKLEN=0.04
       
                          
         AXIS, XAXIS = 1, XRANGE=[min(f_k), fn], $
                          /xlog,$
-                         ;XTICKS=periodo, $
-                        ; XMINOR=8, $
-                         ;XTICKFORMAT='(A1)',$
-                         XTICKN=['', '5:33', '02:47', '01:51'],$
+                         XTICKN=['27:46','02:46'],$
                          xstyle=1,$
-                         xTITLE = 'periods [hr]',$
-                         ;XTICKNAME=X_label, $
                          CHARSIZE = 1.0,$
                          COLOR=negro, $
                          TICKLEN=0.04                     
 
-        AXIS, YAXIS = 0, yrange=[min(pws_s), max(pws_s)], $
-                         YTITLE = 'Spectral component [nT]', $
+        AXIS, YAXIS = 0, yrange=[yinf, ysup], $
+                         YTITLE = 'Componente espectral [nT]', $
                          ystyle=1,$                          
                          COLOR=negro, $
                          /ylog,$
                          CHARSIZE = 1.0;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
                         
-        AXIS, YAXIS = 1, yrange=[min(pws_s), max(pws_s)], $
+        AXIS, YAXIS = 1, yrange=[yinf, ysup], $
                          COLOR=negro, $
                          /ylog,$
                          ystyle=1, $
@@ -652,75 +687,131 @@ plot_title = 'Perturbación Ionosférica asociada a la TGM'
      plot, tot_days, H, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
      POSITION=[0.50,0.73,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /noerase, title=window_title
+     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /noerase, title=''
      
      oplot, tot_days, dst, color=azul
 
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
                          XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
                          XTICKNAME=X_label, $
+                         XTITLE=time_title, $
                          COLOR=negro, $
                          CHARSIZE = 0.8, $
-;                         CHARTHICK=chr_thick1, $
                          TICKLEN=0.04
                          
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
+                         XTICKV=days,$
+                         XTICKN=fix(days),$                         
                          CHARSIZE = 0.8,$
                          XMINOR=8, $
-                         XTICKFORMAT='(A1)',$                         
-                         ;XTICKNAME=REPLICATE(' ', tw+1), $
                          COLOR=negro, $
                          TICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[down,up], $
-                         YTITLE = 'Dst and DH [nT]', $                          
+                         YTITLE = 'DH [nT]', $                          
                          COLOR=negro, $
                          ystyle=2, $
                          CHARSIZE = 0.9;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
                         
         AXIS, YAXIS = 1, YRANGE=[down,up], $
-                         COLOR=negro, $
+                         YTITLE = 'Dst [nT]', $         
+                         COLOR=azul, $
                          ystyle=2, $
                          CHARSIZE = 0.9;, $
-     
+
+;###############################################################################
+;###############################################################################
+    med_idx = MEDIAN(new_idiff)
+    std_idx = stddev(new_idiff, /NAN)
+    
+    i_out = WHERE(new_idiff GE med_idx+std_idx*0.8 OR new_idiff LE med_idx-std_idx*0.8)
+    i_in  = WHERE(new_idiff LE med_idx+std_idx*0.8 AND new_idiff GE med_idx-std_idx*0.8)
+    id_diff_out = new_idiff
+    id_diff_out[i_in]=!Values.F_NAN
+    
+    id_diff_in  = new_idiff
+    id_diff_in[i_out]=!Values.F_NAN
+
+    sup0 = med_idx+std_idx
+    inf0 = med_idx-std_idx
+    
+    lim_sup = fltarr(n_elements(new_idiff))
+    lim_sup[*] = sup0
+
+    lim_inf = fltarr(n_elements(new_idiff))
+    lim_inf[*] = inf0   
+                    
+      
+    up_diono = max(diono)
+    down_diono = min(diono)
+
+    up_tecdiff = max(tec_diff) 
+    down_tecdiff = min(tec_diff)     
      
      up_diono=max(diono)
      down_diono=min(diono)          
      plot, tot_days, diono, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
      POSITION=[0.50,0.49,0.95,0.66], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_diono,up_diono], /noerase
+     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_diono,up_diono], /NOERASE,$
+     /NODATA
 
-    up_diff = max(dif_tec) 
-    down_diff = min(dif_tec)  
-    plot, tec_days, dif_tec, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
+        oplot, new_dstdays, id_diff_in, color=negro, linestyle=3
+        oplot, new_dstdays, id_diff_out, color=negro, linestyle=0, thick=4
+
+;###############################################################################
+;###############################################################################
+    med_tec = MEDIAN(new_tecdiff)
+    std_tec = stddev(new_tecdiff)
+    
+    index_out = WHERE(new_tecdiff GE med_tec+std_tec OR new_tecdiff LE med_tec-std_tec)
+    index_in  = WHERE(new_tecdiff LE med_tec+std_tec AND new_tecdiff GE med_tec-std_tec)
+    tec_diff_out = new_tecdiff
+    tec_diff_out[index_in]=!Values.F_NAN
+    
+    tec_diff_in  = new_tecdiff
+    tec_diff_in[index_out]=!Values.F_NAN
+
+    sup = med_tec+std_tec
+    inf = med_tec-std_tec
+    
+    l_sup = fltarr(n_elements(new_tecdiff))
+    l_sup[*] = sup
+
+    l_inf = fltarr(n_elements(new_tecdiff))
+    l_inf[*] = inf   
+       
+    plot, tec_days, tec_diff, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=rojo,$
      CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.50,0.49,0.95,0.66], $
      XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
-     /noerase, YRANGE=[down_diff, up_diff],$
-     subtitle='time [UT]'
+     /NOERASE, /NODATA, YRANGE=[down_tecdiff, up_tecdiff]
+
+        oplot, new_tecdays, tec_diff_in, color=rojo, linestyle=1
+        oplot, new_tecdays, tec_diff_out, color=rojo, linestyle=0, thick=4
 
        
+    LOADCT, 0, /SILENT
+    oplot, new_tecdays, l_sup, color=rojo, linestyle=1, thick=1
+    oplot, new_tecdays, l_inf, color=rojo, linestyle=1, thick=1
+
+    LOADCT, 39, /SILENT       
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
+                         XTITLE=time_title, $                         
                          XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
                          XTICKNAME=X_label, $
                          COLOR=negro, $
                          CHARSIZE = 0.8, $
-;                         CHARTHICK=chr_thick1, $
                          TICKLEN=0.04
                          
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
-                         XMINOR=8, $
-                         ;XTICKFORMAT='(A1)',$  
+                         XTICKV=days,$
+                         XTICKN=fix(days),$                         
+                         XMINOR=8, $ 
                          CHARSIZE = 0.8, $                       
-                         ;XTICKNAME=REPLICATE(' ', tw+1), $
                          COLOR=negro, $
                          TICKLEN=0.04
 
@@ -729,61 +820,115 @@ plot_title = 'Perturbación Ionosférica asociada a la TGM'
                          COLOR=negro, $
                          ystyle=2, $
                          CHARSIZE = 0.9;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
                         
-        AXIS, YAXIS = 1, YRANGE=[down_diono,up_diono], $
-                         COLOR=negro, $
+        AXIS, YAXIS = 1, YRANGE=[down_tecdiff, up_tecdiff], $
+                         YTITLE = 'TEC-<TEC> [TECu]', $          
+                         COLOR=rojo, $
                          ystyle=2, $
-                         CHARSIZE = 0.9;, $
-                        ; CHARTHICK=chr_thick1;, $      
+                         CHARSIZE = 0.9;, $    
 
                                            
                 
     if max(ddyn) gt max(dp2) then up_p = max(ddyn) else up_p = max(dp2)
     if min(ddyn) lt min(dp2) then down_p = min(ddyn) else down_p = min(dp2)
-                        
+
+;###############################################################################
+;###############################################################################
+    med_ddyn = MEDIAN(new_ddyn)
+    std_ddyn = stddev(new_ddyn, /NAN)
+    
+    ddyn_out = WHERE(new_ddyn GE med_ddyn+std_ddyn*0.8 OR new_ddyn LE med_ddyn-std_ddyn*0.8)
+    ddyn_in  = WHERE(new_ddyn LE med_ddyn+std_ddyn*0.8 AND new_ddyn GE med_ddyn-std_ddyn*0.8)
+    
+    ddyn_diff_out = new_ddyn
+    ddyn_diff_out[ddyn_in]=!Values.F_NAN
+    
+    ddyn_diff_in  = new_ddyn
+    ddyn_diff_in[ddyn_out]=!Values.F_NAN
+
+    supddyn = med_ddyn+std_ddyn
+    infddyn = med_ddyn-std_ddyn
+    
+    lim_supddyn = fltarr(n_elements(new_ddyn))
+    lim_supddyn[*] = supddyn
+
+    lim_infddyn = fltarr(n_elements(new_ddyn))
+    lim_infddyn[*] = infddyn   
+                    
+     upddyn     = max(ddyn)
+     downddyn   = min(ddyn)
+     
+     updp2     = max(dp2)
+     downdp2   = min(dp2)     
+
+    if upddyn gt updp2 then up = upddyn else up=updp2 
+    if downddyn gt downdp2 then down = down else down=downdp2 
+                               
      plot, tot_days, ddyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
      POSITION=[0.50,0.1,0.95,0.42], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_p,up_p], /noerase
-
-     oplot, tot_days, dp2, color=rojo
+     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /NOERASE, /NODATA
+     
+        oplot, new_dstdays, ddyn_diff_in, color=negro, linestyle=3
+        oplot, new_dstdays, ddyn_diff_out, color=negro, linestyle=0, thick=4
+;###############################################################################
+;###############################################################################     
+;###############################################################################
+    med_dp2 = MEDIAN(new_dp2)
+    std_dp2 = stddev(new_dp2, /NAN)
     
+    dp2_out = WHERE(new_dp2 GE med_dp2+std_dp2*0.8 OR new_dp2 LE med_dp2-std_dp2*0.8)
+    dp2_in  = WHERE(new_dp2 LE med_dp2+std_dp2*0.8 AND new_dp2 GE med_dp2-std_dp2*0.8)
+    
+    dp2_diff_out = new_dp2
+    dp2_diff_out[dp2_in]=!Values.F_NAN
+    
+    dp2_diff_in  = new_dp2
+    dp2_diff_in[dp2_out]=!Values.F_NAN
+
+    supdp2 = med_dp2+std_dp2
+    infdp2 = med_dp2-std_dp2
+    
+    lim_supdp2 = fltarr(n_elements(new_dp2))
+    lim_supdp2[*] = supdp2
+
+    lim_infdp2 = fltarr(n_elements(new_dp2))
+    lim_infdp2[*] = infdp2   
+    
+     ;oplot, tot_days, dp2, color=rojo
+        oplot, new_dstdays, dp2_diff_in, color=rojo, linestyle=1
+        oplot, new_dstdays, dp2_diff_out, color=rojo, linestyle=0, thick=4    
 
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
-                         XTICKFORMAT='(A1)',$
+                         XTITLE=time_title, $                         
                          XMINOR=8, $
-                         ;XTICKNAME=X_label, $
+                         XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 0.6, $
-;                         CHARTHICK=chr_thick1, $
+                         CHARSIZE = 0.8, $
                          TICKLEN=0.04
                          
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
                          XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
-                         XTICKNAME=REPLICATE(' ', tw+1), $
+                         XTICKV=days,$
+                         XTICKN=fix(days),$  
+                         CHARSIZE = 0.8, $                                                
                          COLOR=negro, $
                          TICKLEN=0.04
 
-        AXIS, YAXIS = 0, yrange=[down_p,up_p], $ 
+        AXIS, YAXIS = 0, yrange=[down,up], $ 
                          ystyle=2, $  
-                         YTITLE = 'Ddyn & Dp2 [nT]', $                          
+                         YTITLE = 'Ddyn [nT]', $                          
                          COLOR=negro, $
                          CHARSIZE = 0.9;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        ;YRANGE=[down,up]
                         
-        AXIS, YAXIS = 1, yrange=[down_p,up_p], $ 
-                         ystyle=2, $  
-                         COLOR=negro, $
+        AXIS, YAXIS = 1, yrange=[down,up], $ 
+                         ystyle=2, $ 
+                         YTITLE = 'DP2 [nT]', $                           
+                         COLOR=rojo, $
                          CHARSIZE = 0.9;, $
-                        ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]      
+    
 
  
 ;###############################################################################
