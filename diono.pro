@@ -39,7 +39,7 @@ function tec_data, idate
         header = 1      ; Defining number of lines of the header 
 
         idate = string(iyear, imonth, iday, format = '(I4, "-", I02, "-", I02)')
-		file_name = '../rutidl/tec/tec_newformat/'+'tec_'+idate+'.txt'
+		file_name = '../rutidl/tec/'+'tec_'+idate+'.txt'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -151,15 +151,14 @@ function ip_data, date
 	compile_opt idl2, HIDDEN
 
 	year	= date[0]
-	month	= date[1]
-	day 	= date[2]	
+	month	= date[1]	
 
         header = 60      ; Defining number of lines of the header 
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 ;reading data files
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 
-        date = string(year, month, day, format = '(I4, "-", I02, "-", I02)')
+        date = string(year, month, format = '(I4, "-", I02)')
 		
 		file_name = '../rutidl/ip/'+date+'.dat'
 		
@@ -356,7 +355,7 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
                 string_date_tec[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4, "-", I02, "-", I02)')
         
                 data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date_dh[i]+'.dst.early'
-                data_file_name_tec[i] = '../rutidl/tec/tec_newformat/'+'tec_'+string_date_tec[i]+'.txt'
+                data_file_name_tec[i] = '../rutidl/tec/'+'tec_'+string_date_tec[i]+'.txt'
 		        file_dh = FILE_SEARCH(data_file_name_dh[i], COUNT=opened_files)
 		        file_tec = FILE_SEARCH(data_file_name_tec[i], COUNT=opened_files)
 		        
@@ -365,7 +364,7 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
 	            ENDIF
 	            
 	            IF opened_files NE N_ELEMENTS(file_tec) THEN begin
-	                data_file_name_tec[i] = '../rutidl/tec/tec_newformat/'+'tec_'+string_date_tec[i]+'.txt'
+	                data_file_name_tec[i] = '../rutidl/tec/'+'tec_'+string_date_tec[i]+'.txt'
 	            ENDIF 	                            
         ENDFOR
 
@@ -469,7 +468,7 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
     Bsq_ln   = sqline.Bsq
 
 
-    tmp_doy = dst_doy[(idoy*24)-23:fdoy*24-1]
+    tmp_doy = dst_doy[(idoy*24)-24:fdoy*24-1]
     Bsq     = fltarr(n_elements(Bsq_ln))
     
     tmp_doy = tmp_doy[uniq(tmp_doy, sort(tmp_doy))]
@@ -493,7 +492,7 @@ Bsq      = Bsq[val]
 ; define time window
 ;###############################################################################  
 
-   mlat         = 28.10*!pi
+   mlat         = 28.06*!pi
    ld           = cos(mlat/180)
    p_a          = dst*ld
    baseline     = Bsq + p_a             
@@ -501,7 +500,7 @@ Bsq      = Bsq[val]
 ;###############################################################################
 ; define ip parameters
 ;###############################################################################  
-    ip = ip_data([yr_i, mh_i, dy_i])
+    ip = ip_data([yr_i, mh_i])
     
     ip_year = ip.year
     ip_doy  = ip.DOY
@@ -513,7 +512,7 @@ Bsq      = Bsq[val]
     ip_AE   = ip.AE
 
     tmp_doy = dst_doy[(idoy*24)-24:fdoy*24-1]
-    print, dst_doy    
+   
     Ey      = fltarr(n_elements(ip_doy))
     p_dyn   = fltarr(n_elements(ip_doy))
     AE      = fltarr(n_elements(ip_doy))
@@ -571,7 +570,7 @@ AU      = AU[val_AU]
         tmp_spam = 1
         
         Xsize=fix(800*tmp_spam)
-        Ysize=800
+        Ysize=1000
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
         DEVICE, z_buffering=O
         DEVICE, set_character_size = [10, 12]
@@ -583,7 +582,7 @@ AU      = AU[val_AU]
         amarillo  = 220
         verde     = 180
         negro     = 0
-        azul      = 80
+        azul      = 70
         blanco    = 255
         gris      = 130
         morado    = 16
@@ -598,7 +597,7 @@ AU      = AU[val_AU]
 ;###############################################################################    
      X_label   = STRARR(tw+1)+' '
     ; print, n_elements(x_label)
-        months    = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        months    = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
         old_month = mh_i
        ; print, old_month
         FOR i =0,  N_ELEMENTS(X_label)-1 DO BEGIN
@@ -614,353 +613,269 @@ AU      = AU[val_AU]
                 old_month = tmp_month
         ENDFOR
       
-      
+case old_month of
+    1: old_month = 'Enero'
+    2: old_month ='Febrero'
+    3: old_month ='Marzo'
+    4: old_month ='Abril'
+    5: old_month ='Mayo'
+    6: old_month ='Junio'
+    7: old_month ='Julio'
+    8: old_month ='Agosto'
+    9: old_month ='Septiembre'
+    10:old_month ='Octubre'
+    11:old_month ='Noviembre'
+    12:old_month ='Diciembre'
+    else: print, 'fuera de rango'
+endcase    
 
+idate0 = string(yr_i, mh_i, format='(I4,I02)')
+TGM_n = idate0
+case TGM_n of
+    '200311' : TGM_n = 1
+    '200411' : TGM_n = 2
+    '200505' : TGM_n = 3
+    '201503' : TGM_n = 4
+    '201705' : TGM_n = 5
+    '201709' : TGM_n = 6
+    else: print, 'fuera de rango'
+endcase      
 ;###############################################################################
-; Plot data
 ;###############################################################################
-    plot_title = 'Perturbación Ionosférica asociada a la TGM'   
+       days = intarr(tw+1)
+       for i=0, n_elements(days)-1 do begin
+            days[i] = dy_i+i
+       endfor
+       days = days*24/24. 
+       day_time = findgen(24)
+;###############################################################################            
+    plot_title = 'Perturbacion Ionosferica asociada a la '   
 
     if max(dst) gt max(H) then up = max(dst) else up = max(H)
     if min(dst) lt min(H) then down = min(dst) else down = min(H)
     
-window_title = 'De '+string(yr_i, mh_i, dy_i, $
-                FORMAT='(I4, "/", I02, "/", I02)')+' a '$
-                +string(yr_f, mh_f, dy_f, $
-                FORMAT='(I4, "/", I02, "/", I02)')
-
-time_title = ' Tiempo universal (UT) en días.'                                 
-        
-    plot, tot_days, H, XTICKS=tw, xminor = 8, POSITION=[0.07,0.83,0.95,0.95],$
-    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, YRANGE=[down, up],$
-    title = window_title, BACKGROUND = blanco, COLOR=negro, XRANGE=[0, tw],$
-	ytitle = 'Indice DST [nT]',  XTICKNAME=REPLICATE(' ', tw+1)
-
-    oplot, tot_days, dst, COLOR=azul, linestyle=0
-    ;oplot, tot_days, sym_H, COLOR=azul, linestyle=0    
-    
-    if up-down gt 300 then begin
-        for i = -600., 100., 100. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endif else begin
-        for i = -600., 100., 50. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endelse
-        
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.6, $
-;                         CHARTHICK=chr_thick1, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKNAME=REPLICATE(' ', tw+1), $
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down,up], $
-                         YTITLE = 'Dst and DH [nT]', $
-                         ystyle=2, $                          
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        ;YRANGE=[down,up]
-                        
-        AXIS, YAXIS = 1, YRANGE=[down,up], $
-                         COLOR=negro, $
-                         ystyle=2, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]
-
-up_ae       = max(AE)
-down_ae     = min(AL)
-    plot, tot_days, AE, XTICKS=tw, xminor = 8, POSITION=[0.07,0.70,0.95,0.82],$
-    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, YRANGE=[down_ae, up_ae],$
-    BACKGROUND = blanco, COLOR=negro, XRANGE=[0, tw],$
-	ytitle = '',  XTICKNAME=REPLICATE(' ', tw+1), /noerase
-
-    oplot, tot_days, AL, COLOR=azul, linestyle=0
-    oplot, tot_days, AU, COLOR=rojo, linestyle=0    
-
-        for i = -4000., 4000., 1000. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-
-        
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.6, $
-;                         CHARTHICK=chr_thick1, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKNAME=REPLICATE(' ', tw+1), $
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down_ae,up_ae], $
-                         YTITLE = 'AE, AU and AL [nT]', $
-                         ystyle=2, $                          
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        ;YRANGE=[down,up]
-                        
-        AXIS, YAXIS = 1, YRANGE=[down_ae,up_ae], $
-                         COLOR=negro, $
-                         ystyle=2, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]
-  
- up_idx = max(diono)
- down_idx = min(diono)
-      
-    plot, tot_days, diono, XTICKS=tw, xminor = 8, POSITION=[0.07,0.57,0.95,0.69],$
-    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, BACKGROUND = blanco, $
-    COLOR=negro, XRANGE=[0, tw], ytitle = 'Indice DST [nT]',$
-	XTICKNAME=REPLICATE(' ', tw+1), /noerase, YRANGE=[down_idx, up_idx]
-    
-    ;oplot, tot_days, diono, COLOR=azul, linestyle=0
-    
-    if up_idx-down_idx ge 100 then begin
-        for i = -600., 100., 50. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endif else begin
-        for i = -600., 100., 25. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endelse
-    
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.6, $
-;                         CHARTHICK=chr_thick1, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKNAME=REPLICATE(' ', tw+1), $
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0,  YRANGE=[down_idx, up_idx] , $
-                         ystyle=2, $ 
-                         YTITLE = 'diono [nT]', $                          
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        ;YRANGE=[down,up]
-                        
-        AXIS, YAXIS = 1, YRANGE=[down_idx, up_idx] , $
-                         ystyle=2, $ 
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]   	
-
-    if max(med) gt max(tec) then up0 = max(med) else up0 = max(tec)
-    if min(med) lt min(tec) then down0 = min(med) else down0 = min(tec)
-    
-    plot, tec_days, tec, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
-     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.07,0.44,0.95,0.56], $
-     XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6, $
-     /noerase, YRANGE=[down0,up0]
-     
-    oplot, tec_days, med, COLOR=rojo
-    
-    if up0-down0 gt 120 then begin
-        for i = -20., 200., 40. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endif else begin
-        for i = -20., 200., 20. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endelse 
-          
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.6, $
-;                         CHARTHICK=chr_thick1, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKNAME=REPLICATE(' ', tw+1), $
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down0,up0], $
-                         YTITLE = 'TECU', $
-                         ystyle=2, $                          
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        
-                        
-        AXIS, YAXIS = 1, YRANGE=[down0,up0], $
-                         COLOR=negro, $
-                         ystyle=2, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $    
-                         
-
-
-    up_diff = max(dif_tec) 
-    down_diff = min(dif_tec)
-    
-    plot, tec_days, dif_tec, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
-     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.07,0.31,0.95,0.43], $
-     XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
-     /noerase, YRANGE=[down_diff, up_diff]
-
-    if up_diff-down_diff gt 80 then begin
-        for i = -20., 200., 20. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endif else begin
-        for i = -20., 200., 10. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endelse 
-    
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.6, $
-;                         CHARTHICK=chr_thick1, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKNAME=REPLICATE(' ', tw+1), $
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down_diff, up_diff], $
-                         ystyle=2, $  
-                         YTITLE = 'TECU diference', $                          
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        ;YRANGE=[down,up]
-                        
-        AXIS, YAXIS = 1, YRANGE=[down_diff, up_diff], $
-                         ystyle=2, $  
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]     
-
+    window_title = 'TGM'+ string(TGM_n, format='(I01)')+', '+ $
+                string(old_month, yr_i, format='(A, X, I4)')
+;###############################################################################
+; Plot data
+;###############################################################################
     up_E     = max(Ey)
     down_E   = min(Ey)
-    plot, tot_days, Ey, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
-     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.07,0.18,0.95,0.30], $
-     XSTYLE = 5, XRANGE=[0, tw],  XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
-     /noerase, YRANGE=[down_E,up_E]  
-
-    if up_E-down_E gt 30 then begin
-        for i = -50., 50., 10. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endif else begin
-        for i = -50., 50., 5. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endelse 
     
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKFORMAT='(A1)',$
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.6, $
-;                         CHARTHICK=chr_thick1, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKNAME=REPLICATE(' ', tw+1), $
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down_E,up_E], $
-                         ystyle=2, $   
-                         YTITLE = 'Ey [mV/m]', $                          
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        ;YRANGE=[down,up]
-                        
-        AXIS, YAXIS = 1, YRANGE=[down_E,up_E], $ 
-                         ystyle=2, $  
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
-                        ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]         	
     up_p    = max(p_dyn)
     down_p  = min(p_dyn) 
-    plot, tot_days, p_dyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
-     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.07,0.05,0.95,0.17], $
+        
+    plot, tot_days, Ey, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.1,0.76,0.9,0.93], $
+     XSTYLE = 5, XRANGE=[0, tw],  XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
+     YRANGE=[down_E,up_E]  
+
+   	
+
+    plot, tot_days, p_dyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=azul,$
+     CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.1,0.76,0.9,0.93], $
      XSTYLE = 5, XRANGE=[0, tw], YRANGE=[down_p,up_p], XTICKNAME=REPLICATE(' ', tw+1), $
      ySTYLE = 6, /noerase;, SUBTITLE = time_title 
 
-    if up_p-down_p gt 30 then begin
-        for i = 0., 50., 10. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endif else begin
-        for i = 0., 50., 5. do oplot, [0,tw], [i,i], linestyle=1, COLOR=negro
-    endelse 
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
+                         XTITLE='Tiempo Universal (dias)', $                           
                          XMINOR=8, $
                          ;XTICKFORMAT='(A1)',$
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         xtitle=time_title,$
-                         CHARSIZE = 0.6, $
+                         CHARSIZE = 0.8, $
 ;                         CHARTHICK=chr_thick1, $
                          TICKLEN=0.04
                          
-        AXIS, XAXIS = 1, XRANGE=[0,tw], $
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $      
                          XTICKS=tw, $
                          XMINOR=8, $
-                         XTICKNAME=REPLICATE(' ', tw+1), $
+                         XTICKV=days,$
+                         XTICKN=fix(days),$
                          COLOR=negro, $
+                         CHARSIZE = 0.8, $
                         ; xtitle=time_title,$
                          TICKLEN=0.04
 
-        AXIS, YAXIS = 0, YRANGE=[down_p,up_p], $
+        AXIS, YAXIS = 0, YRANGE=[down_E, up_E], $
                          ystyle=2, $  
-                         YTITLE = 'P [nPa]', $                          
+                         YTITLE = 'E [mV/m]', $                          
                          COLOR=negro, $
-                         CHARSIZE = 0.6;, $
+                         CHARSIZE = 0.9;, $
                         ; CHARTHICK=chr_thick1;, $
                          ;TICKLEN=0.00
                         ;YRANGE=[down,up]
                         
         AXIS, YAXIS = 1, YRANGE=[down_p,up_p], $
                          ystyle=2, $  
-                         COLOR=negro, $
-                         CHARSIZE = 0.6;, $
+                         YTITLE = 'P [nPa]', $                          
+                         COLOR=azul, $
+                         CHARSIZE = 0.9;, $
                         ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]   
+;                         YRANGE=[down0,up0]  
+
+        
+    plot, tot_days, H, XTICKS=tw, xminor = 8, POSITION=[0.1,0.52,0.9,0.69],$
+    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, YRANGE=[down, up],$
+    title = '', BACKGROUND = blanco, COLOR=negro, XRANGE=[0, tw],$
+	ytitle = 'Indice DST [nT]',  XTICKNAME=REPLICATE(' ', tw+1), /noerase
+
+    oplot, tot_days, dst, COLOR=morado, linestyle=0
+    ;oplot, tot_days, sym_H, COLOR=azul, linestyle=0    
+
+        AXIS, XAXIS = 0, XRANGE=[0,tw], $
+                         XTITLE='Tiempo Universal (dias)', $  
+                         XTICKS=tw, $
+                         XMINOR=8, $
+                       ;  XTICKFORMAT='(A1)',$
+                         XTICKNAME=X_label, $
+                         COLOR=negro, $
+                         CHARSIZE = 0.8, $
+;                         CHARTHICK=chr_thick1, $
+                         TICKLEN=0.04
+                         
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $      
+                         XTICKS=tw, $
+                         XMINOR=8, $
+                         XTICKV=days,$
+                         XTICKN=fix(days),$
+                         CHARSIZE = 0.8, $                         
+                         COLOR=negro, $
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down,up], $
+                         YTITLE = 'DH [nT]', $
+                         ystyle=2, $                          
+                         COLOR=negro, $
+                         CHARSIZE = 0.9;, $
+                        
+        AXIS, YAXIS = 1, YRANGE=[down,up], $
+                         YTITLE = 'Dst [nT]', $        
+                         COLOR=morado, $
+                         ystyle=2, $
+                         CHARSIZE = 0.9;, $
+
+up_ae       = max(AE)
+down_ae     = min(AE)
+
+    plot, tot_days, AE, XTICKS=tw, xminor = 8, POSITION=[0.1,0.28,0.9,0.45],$
+    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, YRANGE=[down_ae, up_ae],$
+    BACKGROUND = blanco, COLOR=negro, XRANGE=[0, tw],$
+	ytitle = '',  XTICKNAME=REPLICATE(' ', tw+1), /noerase
+
+        AXIS, XAXIS = 0, XRANGE=[0,tw], $
+                         XTITLE='Tiempo Universal (dias)', $  
+                         XTICKS=tw, $
+                         XMINOR=8, $
+                        ; XTICKFORMAT='(A1)',$
+                         XTICKNAME=X_label, $
+                         COLOR=negro, $
+                         CHARSIZE = 0.8, $
+;                         CHARTHICK=chr_thick1, $
+                         TICKLEN=0.04
+                         
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $     
+                         XTICKS=tw, $
+                         XMINOR=8, $
+                         XTICKV=days,$
+                         XTICKN=fix(days),$
+                         COLOR=negro, $
+                         CHARSIZE = 0.8, $
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down_ae,up_ae], $
+                         YTITLE = 'AE [nT]', $
+                         ystyle=2, $                          
+                         COLOR=negro, $
+                         CHARSIZE = 0.9;, $
+
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_ae,up_ae], $
+                         COLOR=negro, $
+                         ystyle=2, $
+                         CHARSIZE = 0.9;, $
+
+      
+    up_diono = max(diono)
+    down_diono = min(diono)
+
+    up_tecdiff = max(dif_tec) 
+    down_tecdiff = min(dif_tec)
+          
+    plot, tot_days, diono, XTICKS=tw, xminor = 8, POSITION=[0.1,0.04,0.9,0.21],$
+    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, BACKGROUND = blanco, $
+    COLOR=negro, XRANGE=[0, tw], ytitle = 'Indice DST [nT]',$
+	XTICKNAME=REPLICATE(' ', tw+1), /noerase, YRANGE=[down_diono, up_diono]
+
+
+
+    plot, tec_days, dif_tec, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=rojo,$
+     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.1,0.04,0.9,0.21], $
+     XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
+     /noerase, YRANGE=[down_tecdiff, up_tecdiff]
+
+    
+        AXIS, XAXIS = 0, XRANGE=[0,tw], $
+                         XTITLE='Tiempo Universal (dias)', $
+                         XTICKS=tw, $
+                         XMINOR=8, $
+                         ;XTICKFORMAT='(A1)',$
+                         XTICKNAME=X_label, $
+                         COLOR=negro, $
+                         CHARSIZE = 0.8, $
+;                         CHARTHICK=chr_thick1, $
+                         TICKLEN=0.04
+                         
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
+                         XTICKS=tw, $
+                         XMINOR=8, $
+                         XTICKV=days,$
+                         XTICKN=fix(days),$
+                        CHARSIZE = 0.8, $                         
+                         COLOR=negro, $
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down_diono, up_diono], $
+                         ystyle=2, $  
+                         YTITLE = 'Diono (nT)', $                          
+                         COLOR=negro, $
+                         CHARSIZE = 0.9;, $
+                        ; CHARTHICK=chr_thick1;, $
+                         ;TICKLEN=0.00
+                        ;YRANGE=[down,up]
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_tecdiff, up_tecdiff], $
+                         ystyle=2, $  
+                         YTITLE = 'TEC-<TEC> (TECu)', $                          
+                         COLOR=rojo, $
+                         CHARSIZE = 0.9;, $
+    
+
+;###############################################################################
+;###############################################################################
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   y = 0.97
+   XYOuts, X, y, plot_title+window_title, /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.25
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.949, 'Tiempo Local (dias)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=0.8   
+
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.71, 'Tiempo Local (dias)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=0.8  
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.468, 'Tiempo Local (dias)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=0.8  
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.231, 'Tiempo Local (dias)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=0.8           
+;###############################################################################
+;############################################################################### 
      Image=TVRD() 
     TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!
     
