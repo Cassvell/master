@@ -251,7 +251,6 @@ pro iono_resp, r_dst, B_sq, DOY, date_i, date_f
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
-
 	yr_i	= date_i[0]
 	mh_i	= date_i[1]
 	dy_i 	= date_i[2]	
@@ -431,7 +430,6 @@ endcase
     
     new_tecdiff = FLTARR(N_ELEMENTS(new_tecdays))     	
     
-;    print, N_ELEMENTS(new_tecdays), N_ELEMENTS(new_tecdiff)
     tmp_tecdif  = INTERPOL(tec_diff, N_ELEMENTS(new_tecdays))
     new_tecdiff = tmp_tecdif
 ;############################################################################### 
@@ -442,7 +440,6 @@ endcase
     
     new_idiff = FLTARR(N_ELEMENTS(new_dstdays))     	
     
-;    print, N_ELEMENTS(new_tecdays), N_ELEMENTS(new_tecdiff)
     tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(new_dstdays))
     new_idiff = tmp_idiff  
 ;###############################################################################
@@ -487,14 +484,12 @@ Bsq      = Bsq[val]
 time = 3600.0
 
 fn      = float(1.0/(2.0*time)) ; frecuencia de Nyquist
-
 y       = FFT(diono)
-;print, y
+
 pws     = abs(y[0:n/2])^2
 pws_s   = smooth(pws, 1)
 
 f_k     = (1+findgen(n))/(n*time)
-;print, n_elements(f_k)
 print, 'Nyquist freq: ', fn, 'Hz'
 ;###############################################################################
 ; define pass band frequencies
@@ -503,21 +498,21 @@ passband_l = idate0
 case passband_l of
     '200311' : passband_l = 1.22e-5
     '200411' : passband_l = 1.32e-5
-    '200505' : passband_l = 1.18e-5
-    '201503' : passband_l = 1.18e-5
-    '201705' : passband_l = 1.18e-5
-    '201709' : passband_l = 1.18e-5
+    '200505' : passband_l = 1.2e-5
+    '201503' : passband_l = 1.28e-5
+    '201705' : passband_l = 1.25e-5
+    '201709' : passband_l = 1.22e-5
     else: print, 'fuera de rango'
 endcase  
 
 passband_u = idate0
 case passband_u of
-    '200311' : passband_u = 1.6e-5
-    '200411' : passband_u = 1.6e-5
-    '200505' : passband_u = 1.6e-5
-    '201503' : passband_u = 1.8e-5
-    '201705' : passband_u = 1.8e-5
-    '201709' : passband_u = 1.88e-5
+    '200311' : passband_u = 1.5e-5
+    '200411' : passband_u = 1.55e-5
+    '200505' : passband_u = 1.42e-5
+    '201503' : passband_u = 1.6e-5
+    '201705' : passband_u = 1.55e-5
+    '201709' : passband_u = 1.58e-5
     else: print, 'fuera de rango'
 endcase  
 ;###############################################################################
@@ -530,7 +525,7 @@ case highpass_l of
     '200505' : highpass_l = 7.3e-5
     '201503' : highpass_l = 7.5e-5
     '201705' : highpass_l = 7.5e-5
-    '201709' : highpass_l = 7.5e-5
+    '201709' : highpass_l = 7.e-5
     else: print, 'fuera de rango'
 endcase
 ;###############################################################################
@@ -561,18 +556,17 @@ dp2         = convol(diono, coeff_dp2, /edge_wrap)
 ; define device and color parameters 
 ;###############################################################################      
         Device_bak2 = !D.Name 
-        SET_PLOT, 'Z'
         
+        SET_PLOT, 'Z'      
         tmp_spam = 1
-        IF tw GT 7 THEN tmp_spam = 1.5
-        IF tw GT 15 THEN tmp_spam = 2.
         
         Xsize=fix(1600*tmp_spam)
         Ysize=1000
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
         DEVICE, z_buffering=O
         DEVICE, set_character_size = [10, 12]
-             
+        SET_PLOT, 'X'          
+        DEVICE, RETAIN=2, DECOMPOSED=0     
         chr_size1 = 0.9
         chr_thick1= 1.0
         space     = 0.015
@@ -582,17 +576,15 @@ dp2         = convol(diono, coeff_dp2, /edge_wrap)
         negro     = 0
         azul      = 70
         blanco    = 255
-        gris      = 130
+        gris      = 220
         morado    = 16
         
     TVLCT, R_bak, G_bak, B_bak, /GET
         
     LOADCT, 39, /SILENT
      X_label   = STRARR(tw+1)+' '
-    ; print, n_elements(x_label)
         months    = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
         old_month = mh_i
-       ; print, old_month
         FOR i =0,  N_ELEMENTS(X_label)-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -621,7 +613,6 @@ case old_month of
     12:old_month ='Diciembre'
     else: print, 'fuera de rango'
 endcase             
-
 ;###############################################################################
 ;###############################################################################
        days = intarr(tw+1)
@@ -629,9 +620,7 @@ endcase
             days[i] = dy_i+i
        endfor
        days = days*24/24. 
-       day_time = findgen(24)
-
-   
+       day_time = findgen(24)   
 ;############################################################################### 
     time_title = ' Tiempo universal (dias).'
     window_title = 'TGM'+ string(TGM_n, format='(I01)')+', '+ $
@@ -656,24 +645,23 @@ endcase
 ;###############################################################################
 ;###############################################################################           
     ysup = max(pws)+10
-    yinf = min(pws)-0.001
+    yinf = min(pws)-0.0001
     
     plot, f_k, pws_s, /xlog, /ylog, xrange = [min(f_k), fn], POSITION=[0.07,0.1,0.45,0.9],$
     yrange=[yinf, ysup], BACKGROUND = blanco, color=negro, $
     CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA,$
     /NOERASE
-    ;title = 'Ionospheric electric current disturbance (diono) PWS'	 
-    
-   ; print, f_k[0], passband_u, passband_l
-    
-  ;  bandwidth = [f_k[0], f_k, f_k[]]
+
+    LOADCT, 0, /SILENT
+
     POLYFILL, [passband_l, passband_u ,passband_u, passband_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=rojo
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=gris
 
     POLYFILL, [highpass_l, fn ,fn, highpass_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=rojo
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=gris
     oplot, f_k, pws_s, color=negro, thick=5
 
+    LOADCT, 39, /SILENT
         AXIS, XAXIS = 0, XRANGE=[min(f_k), fn], $
                          /xlog,$
                          xstyle=1,$
@@ -792,7 +780,6 @@ endcase
 
         oplot, new_dstdays, id_diff_in, color=negro, linestyle=3
         oplot, new_dstdays, id_diff_out, color=negro, linestyle=0, thick=4
-
 ;###############################################################################
 ;###############################################################################
     med_tec = MEDIAN(new_tecdiff)
@@ -824,8 +811,8 @@ endcase
         oplot, new_tecdays, tec_diff_out, color=rojo, linestyle=0, thick=4
            
     LOADCT, 0, /SILENT
-    oplot, tec_days, l_sup, color=rojo, linestyle=2, thick=1
-    oplot, tec_days, l_inf, color=rojo, linestyle=2, thick=1
+    oplot, tec_days, l_sup, color=gris, linestyle=2, thick=1
+    oplot, tec_days, l_inf, color=gris, linestyle=2, thick=1
 
     LOADCT, 39, /SILENT       
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
@@ -973,14 +960,12 @@ endcase
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    XYOuts, X, 0.035, plot_title2, /Normal, $
    color=negro, Alignment=0.5, Charsize=1.45  
-
-
+    LOADCT, 39, /SILENT     
 ;###############################################################################
 ; saving png
 ;###############################################################################     
      Image=TVRD() 
-    TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!
-    
+    TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!    
     TVLCT, R_bak, G_bak, B_bak
         
     ;DEVICE, /CLOSE
