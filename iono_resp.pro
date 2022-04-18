@@ -501,7 +501,7 @@ print, 'Nyquist freq: ', fn, 'Hz'
 ;###############################################################################  
 passband_l = idate0
 case passband_l of
-    '200311' : passband_l = 1.2e-5
+    '200311' : passband_l = 1.22e-5
     '200411' : passband_l = 1.32e-5
     '200505' : passband_l = 1.18e-5
     '201503' : passband_l = 1.18e-5
@@ -512,7 +512,7 @@ endcase
 
 passband_u = idate0
 case passband_u of
-    '200311' : passband_u = 1.65e-5
+    '200311' : passband_u = 1.6e-5
     '200411' : passband_u = 1.6e-5
     '200505' : passband_u = 1.6e-5
     '201503' : passband_u = 1.8e-5
@@ -525,7 +525,7 @@ endcase
 ;###############################################################################
 highpass_l = idate0
 case highpass_l of
-    '200311' : highpass_l = 8e-5
+    '200311' : highpass_l = 7e-5
     '200411' : highpass_l = 7.5e-5
     '200505' : highpass_l = 7.3e-5
     '201503' : highpass_l = 7.5e-5
@@ -630,25 +630,48 @@ endcase
        endfor
        days = days*24/24. 
        day_time = findgen(24)
+
+   
+;############################################################################### 
+    time_title = ' Tiempo universal (dias).'
+    window_title = 'TGM'+ string(TGM_n, format='(I01)')+', '+ $
+                    string(old_month, yr_i, format='(A, X, I4)')
+
+    plot_title1 = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
+    plot_title2 = 'Perturbaciones Ionosfericas DP2 y DDyn'
+    
+    periodo = 'Periodo (Hr)'        
 ;###############################################################################
-;###############################################################################            
-window_title = 'TGM'+ string(TGM_n, format='(I01)')+', '+ $
-                string(old_month, yr_i, format='(A, X, I4)')
+;###############################################################################               
+    plot, f_k, pws_s, /xlog, /ylog, POSITION=[0.07,0.1,0.95,0.9],$
+    BACKGROUND = blanco, color=negro, $
+    CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA    
 
-time_title = ' Tiempo universal (UT) en dias.' 
 
-plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   y = 0.95
+   
+   XYOuts, X, y, window_title, /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.65               
 ;###############################################################################
 ;###############################################################################           
     ysup = max(pws)+10
     yinf = min(pws)-0.001
     
-    plot, f_k, pws_s, /xlog, /ylog, xrange = [min(f_k), fn], POSITION=[0.07,0.1,0.40,0.9],$
+    plot, f_k, pws_s, /xlog, /ylog, xrange = [min(f_k), fn], POSITION=[0.07,0.1,0.45,0.9],$
     yrange=[yinf, ysup], BACKGROUND = blanco, color=negro, $
-    CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA
+    CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA,$
+    /NOERASE
     ;title = 'Ionospheric electric current disturbance (diono) PWS'	 
+    
+   ; print, f_k[0], passband_u, passband_l
+    
+  ;  bandwidth = [f_k[0], f_k, f_k[]]
+    POLYFILL, [passband_l, passband_u ,passband_u, passband_l], $
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=rojo
 
-
+    POLYFILL, [highpass_l, fn ,fn, highpass_l], $
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=rojo
     oplot, f_k, pws_s, color=negro, thick=5
 
         AXIS, XAXIS = 0, XRANGE=[min(f_k), fn], $
@@ -681,12 +704,21 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
                          ystyle=1, $
                          CHARSIZE = 1.0;, $
 
-    
+
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.035, plot_title1, /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.45  
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.924, periodo, /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.0   
+;###############################################################################
+;###############################################################################         
      up = max(H)
      down=min(H)
      plot, tot_days, H, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
-     POSITION=[0.50,0.73,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
+     POSITION=[0.55,0.73,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /noerase, title=''
      
      oplot, tot_days, dst, color=azul
@@ -697,7 +729,7 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
                          XTICKNAME=X_label, $
                          XTITLE=time_title, $
                          COLOR=negro, $
-                         CHARSIZE = 0.8, $
+                         CHARSIZE = 0.9, $
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
@@ -754,7 +786,7 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
      down_diono=min(diono)          
      plot, tot_days, diono, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.50,0.49,0.95,0.66], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
+     POSITION=[0.55,0.49,0.95,0.66], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_diono,up_diono], /NOERASE,$
      /NODATA
 
@@ -777,24 +809,23 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
     sup = med_tec+std_tec
     inf = med_tec-std_tec
     
-    l_sup = fltarr(n_elements(new_tecdiff))
+    l_sup = fltarr(n_elements(tec_diff))
     l_sup[*] = sup
 
-    l_inf = fltarr(n_elements(new_tecdiff))
+    l_inf = fltarr(n_elements(tec_diff))
     l_inf[*] = inf   
        
     plot, tec_days, tec_diff, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=rojo,$
-     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.50,0.49,0.95,0.66], $
+     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.55,0.49,0.95,0.66], $
      XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
      /NOERASE, /NODATA, YRANGE=[down_tecdiff, up_tecdiff]
 
-        oplot, new_tecdays, tec_diff_in, color=rojo, linestyle=1
+        oplot, new_tecdays, tec_diff_in, color=rojo, linestyle=0
         oplot, new_tecdays, tec_diff_out, color=rojo, linestyle=0, thick=4
-
-       
+           
     LOADCT, 0, /SILENT
-    oplot, new_tecdays, l_sup, color=rojo, linestyle=1, thick=1
-    oplot, new_tecdays, l_inf, color=rojo, linestyle=1, thick=1
+    oplot, tec_days, l_sup, color=rojo, linestyle=2, thick=1
+    oplot, tec_days, l_inf, color=rojo, linestyle=2, thick=1
 
     LOADCT, 39, /SILENT       
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
@@ -803,7 +834,7 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
                          XMINOR=8, $
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 0.8, $
+                         CHARSIZE = 0.9, $
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
@@ -825,13 +856,11 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
                          YTITLE = 'TEC-<TEC> [TECu]', $          
                          COLOR=rojo, $
                          ystyle=2, $
-                         CHARSIZE = 0.9;, $    
-
-                                           
-                
-    if max(ddyn) gt max(dp2) then up_p = max(ddyn) else up_p = max(dp2)
-    if min(ddyn) lt min(dp2) then down_p = min(ddyn) else down_p = min(dp2)
-
+                         CHARSIZE = 0.9;, $                                               
+;###############################################################################
+;###############################################################################                
+    if max(ddyn) gt max(dp2) then up = max(ddyn) else up = max(dp2)
+    if min(ddyn) lt min(dp2) then down = min(ddyn) else down = min(dp2)
 ;###############################################################################
 ;###############################################################################
     med_ddyn = MEDIAN(new_ddyn)
@@ -866,11 +895,11 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
                                
      plot, tot_days, ddyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.50,0.1,0.95,0.42], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
+     POSITION=[0.55,0.1,0.95,0.42], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /NOERASE, /NODATA
      
         oplot, new_dstdays, ddyn_diff_in, color=negro, linestyle=3
-        oplot, new_dstdays, ddyn_diff_out, color=negro, linestyle=0, thick=4
+        oplot, new_dstdays, ddyn_diff_out, color=negro, linestyle=0, thick=5
 ;###############################################################################
 ;###############################################################################     
 ;###############################################################################
@@ -905,7 +934,7 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
                          XMINOR=8, $
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 0.8, $
+                         CHARSIZE = 0.9, $
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
@@ -927,10 +956,25 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
                          ystyle=2, $ 
                          YTITLE = 'DP2 [nT]', $                           
                          COLOR=rojo, $
-                         CHARSIZE = 0.9;, $
-    
+                         CHARSIZE = 0.9;, $      
+;###############################################################################    
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.921, 'Tiempo Local (dias)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=0.9  
 
- 
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.679, 'Tiempo Local (dias)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=0.9  
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.441, 'Tiempo Local (dias)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=0.9  
+   
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOuts, X, 0.035, plot_title2, /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.45  
+
+
 ;###############################################################################
 ; saving png
 ;###############################################################################     
@@ -953,14 +997,14 @@ plot_title = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
                 true_image[0,*,*] = reds[image]
                 true_image[1,*,*] = greens[image]
                 true_image[2,*,*] = blues[image]
-                write_jpeg, path+'iono_resp'+Date+'.jpg', True_Image, true=1
+                write_jpeg, path+'iono_resp_V2'+Date+'.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'iono_resp'+Date+'.png', Image, reds,greens,blues
+                WRITE_PNG, path+'iono_resp_V2'+Date+'.png', Image, reds,greens,blues
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'iono_resp'+Date+'.png'
+                print, '        Saving: '+path+'iono_resp_V2'+Date+'.png'
                 print, ''
         ENDIF
         RETURN 	
