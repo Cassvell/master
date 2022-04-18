@@ -593,9 +593,10 @@ AU      = AU[val_AU]
         Xsize=fix(800*tmp_spam)
         Ysize=1000
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
-        DEVICE, z_buffering=O
+        DEVICE, z_buffering=0     
         DEVICE, set_character_size = [10, 12]
-             
+      ;  DEVICE, IDL_GR_X_RETAIN=0
+        DEVICE, DECOMPOSED=0     
         chr_size1 = 0.9
         chr_thick1= 1.0
         space     = 0.015
@@ -838,10 +839,6 @@ down_ae     = min(AE)
     lim_inf = fltarr(n_elements(new_idiff))
     lim_inf[*] = inf0   
                     
-    up  = max(dst-H)
-    down= min(dst-H)
-    up2      = max(tec-med)
-    down2    = min(tec-med)
       
     up_diono = max(diono)
     down_diono = min(diono)
@@ -859,7 +856,7 @@ down_ae     = min(AE)
         oplot, new_dstdays, id_diff_out, color=negro, linestyle=0, thick=4
 ;###############################################################################
 ;###############################################################################
- med_tec = MEDIAN(new_tecdiff)
+    med_tec = MEDIAN(new_tecdiff)
     std_tec = stddev(new_tecdiff)
     
     index_out = WHERE(new_tecdiff GE med_tec+std_tec OR new_tecdiff LE med_tec-std_tec)
@@ -889,7 +886,8 @@ down_ae     = min(AE)
 
         oplot, new_tecdays, tec_diff_in, color=rojo, linestyle=1
         oplot, new_tecdays, tec_diff_out, color=rojo, linestyle=0, thick=4
-       ; oplot, new_tecdays, new_tecdiff, color=rojo, psym=3, thick=4
+
+       
     LOADCT, 0, /SILENT
     oplot, new_tecdays, l_sup, color=rojo, linestyle=1, thick=1
     oplot, new_tecdays, l_inf, color=rojo, linestyle=1, thick=1
