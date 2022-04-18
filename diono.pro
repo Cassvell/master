@@ -456,9 +456,30 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
     ; interpolate at the locations of the bad data using the good data    
     if nbaddata gt 0 then H_tmp[baddata] = interpol(H_tmp[H_exist], H_exist, baddata)
     H = H_tmp  
-;###############################################################################      
-    tec_days= findgen(tw*12)/12.0                        
-    dif_tec = tec-med    
+;###############################################################################                               
+;############################################################################### 
+    tec_days= findgen(tw*12)/12.0  
+    tec_diff = tec-med
+    
+    new_tecdays = findgen(tw*1440)/1440.0 ;se genera un arreglo de tiempo con 
+;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
+    
+    new_tecdiff = FLTARR(N_ELEMENTS(new_tecdays))     	
+    
+;    print, N_ELEMENTS(new_tecdays), N_ELEMENTS(new_tecdiff)
+    tmp_tecdif  = INTERPOL(tec_diff, N_ELEMENTS(new_tecdays))
+    new_tecdiff = tmp_tecdif
+;############################################################################### 
+    i_diff = dst-H
+    
+    new_dstdays = findgen(tw*1440)/1440.0 ;se genera un arreglo de tiempo con 
+;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
+    
+    new_idiff = FLTARR(N_ELEMENTS(new_dstdays))     	
+    
+;    print, N_ELEMENTS(new_tecdays), N_ELEMENTS(new_tecdiff)
+    tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(new_dstdays))
+    new_idiff = tmp_idiff           
 ;###############################################################################
 ; define diurnal baseline
 ;###############################################################################  
@@ -795,26 +816,85 @@ down_ae     = min(AE)
                          COLOR=negro, $
                          ystyle=2, $
                          CHARSIZE = 0.9;, $
+;###############################################################################
+;###############################################################################
+    med_idx = MEDIAN(new_idiff)
+    std_idx = stddev(new_idiff, /NAN)
+    
+    i_out = WHERE(new_idiff GE med_idx+std_idx*0.8 OR new_idiff LE med_idx-std_idx*0.8)
+    i_in  = WHERE(new_idiff LE med_idx+std_idx*0.8 AND new_idiff GE med_idx-std_idx*0.8)
+    id_diff_out = new_idiff
+    id_diff_out[i_in]=!Values.F_NAN
+    
+    id_diff_in  = new_idiff
+    id_diff_in[i_out]=!Values.F_NAN
 
+    sup0 = med_idx+std_idx
+    inf0 = med_idx-std_idx
+    
+    lim_sup = fltarr(n_elements(new_idiff))
+    lim_sup[*] = sup0
+
+    lim_inf = fltarr(n_elements(new_idiff))
+    lim_inf[*] = inf0   
+                    
+    up  = max(dst-H)
+    down= min(dst-H)
+    up2      = max(tec-med)
+    down2    = min(tec-med)
       
     up_diono = max(diono)
     down_diono = min(diono)
 
-    up_tecdiff = max(dif_tec) 
-    down_tecdiff = min(dif_tec)
+    up_tecdiff = max(tec_diff) 
+    down_tecdiff = min(tec_diff)
           
     plot, tot_days, diono, XTICKS=tw, xminor = 8, POSITION=[0.1,0.04,0.9,0.21],$
     XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, BACKGROUND = blanco, $
     COLOR=negro, XRANGE=[0, tw], ytitle = 'Indice DST [nT]',$
-	XTICKNAME=REPLICATE(' ', tw+1), /noerase, YRANGE=[down_diono, up_diono]
+	XTICKNAME=REPLICATE(' ', tw+1), /noerase, YRANGE=[down_diono, up_diono], $
+	/NODATA
 
+        oplot, new_dstdays, id_diff_in, color=negro, linestyle=3
+        oplot, new_dstdays, id_diff_out, color=negro, linestyle=0, thick=4
+;###############################################################################
+;###############################################################################
+ med_tec = MEDIAN(new_tecdiff)
+    std_tec = stddev(new_tecdiff)
+    
+    index_out = WHERE(new_tecdiff GE med_tec+std_tec OR new_tecdiff LE med_tec-std_tec)
+    index_in  = WHERE(new_tecdiff LE med_tec+std_tec AND new_tecdiff GE med_tec-std_tec)
+    tec_diff_out = new_tecdiff
+    tec_diff_out[index_in]=!Values.F_NAN
+    
+    tec_diff_in  = new_tecdiff
+    tec_diff_in[index_out]=!Values.F_NAN
+;    print, tec_dif
 
+;print, N_ELEMENTS(  index_out  )
+;print, index_out
+    sup = med_tec+std_tec
+    inf = med_tec-std_tec
+    
+    l_sup = fltarr(n_elements(new_tecdiff))
+    l_sup[*] = sup
 
-    plot, tec_days, dif_tec, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=rojo,$
+    l_inf = fltarr(n_elements(new_tecdiff))
+    l_inf[*] = inf
+
+    plot, tec_days, tec_diff, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=rojo,$
      CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.1,0.04,0.9,0.21], $
      XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
-     /noerase, YRANGE=[down_tecdiff, up_tecdiff]
+     /noerase, YRANGE=[down_tecdiff, up_tecdiff], /NODATA
 
+        oplot, new_tecdays, tec_diff_in, color=rojo, linestyle=1
+        oplot, new_tecdays, tec_diff_out, color=rojo, linestyle=0, thick=4
+       ; oplot, new_tecdays, new_tecdiff, color=rojo, psym=3, thick=4
+    LOADCT, 0, /SILENT
+    oplot, new_tecdays, l_sup, color=rojo, linestyle=1, thick=1
+    oplot, new_tecdays, l_inf, color=rojo, linestyle=1, thick=1
+
+    LOADCT, 39, /SILENT
     
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTITLE='Tiempo Universal (dias)', $
@@ -894,14 +974,14 @@ down_ae     = min(AE)
                 true_image[0,*,*] = reds[image]
                 true_image[1,*,*] = greens[image]
                 true_image[2,*,*] = blues[image]
-                write_jpeg, path+'mag_tec_V1_'+Date+'.jpg', True_Image, true=1
+                write_jpeg, path+'mag_tec_V2_'+Date+'.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'mag_tec_V1_'+Date+'.png', Image, reds,greens,blues
+                WRITE_PNG, path+'mag_tec_V2_'+Date+'.png', Image, reds,greens,blues
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'mag_tec_V1_'+Date+'.png'
+                print, '        Saving: '+path+'mag_tec_V2_'+Date+'.png'
                 print, ''
         ENDIF
         RETURN 	
