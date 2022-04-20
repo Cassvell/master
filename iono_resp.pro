@@ -371,8 +371,7 @@ endcase
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
-                        READS, string_date_tec[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,X,I02,X,I02)'
-                 
+                        READS, string_date_tec[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,X,I02,X,I02)'                 
                         d_tec = tec_data([tmp_year, tmp_month, tmp_day])
                         
                         tec[i*12:(i+1)*12-1] = d_tec.tec[*]
@@ -423,27 +422,26 @@ endcase
     H = H_tmp
 ;###############################################################################      
     tec_days= findgen(tw*12)/12.0                         
-    tec_diff = tec-med
-    
+    tec_diff = tec-med    
     new_tecdays = findgen(tw*1440)/1440.0 ;se genera un arreglo de tiempo con 
 ;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
     
-    new_tecdiff = FLTARR(N_ELEMENTS(new_tecdays))     	
-    
+    new_tecdiff = FLTARR(N_ELEMENTS(new_tecdays))     	    
     tmp_tecdif  = INTERPOL(tec_diff, N_ELEMENTS(new_tecdays))
     new_tecdiff = tmp_tecdif
-;############################################################################### 
-    i_diff = dst-H
-    
+;###############################################################################
     new_dstdays = findgen(tw*1440)/1440.0 ;se genera un arreglo de tiempo con 
 ;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
     
-    new_idiff = FLTARR(N_ELEMENTS(new_dstdays))     	
+    new_dst = FLTARR(N_ELEMENTS(new_dstdays))     	    
+    tmp_dst  = INTERPOL(dst, N_ELEMENTS(new_dstdays))
+    new_dst = tmp_dst 
     
-    tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(new_dstdays))
-    new_idiff = tmp_idiff  
-;###############################################################################
-;###############################################################################
+    new_H = FLTARR(N_ELEMENTS(new_dstdays))     	    
+    tmp_H  = INTERPOL(H, N_ELEMENTS(new_dstdays))
+    new_H = tmp_H 
+;###############################################################################    
+;############################################################################### 
 ; define diurnal baseline
 ;###############################################################################  
     sqline = baseline_sq([yr_i, mh_i])
@@ -492,6 +490,11 @@ pws_s   = smooth(pws, 1)
 f_k     = (1+findgen(n))/(n*time)
 print, 'Nyquist freq: ', fn, 'Hz'
 ;###############################################################################
+    i_diff = diono
+    new_idiff = FLTARR(N_ELEMENTS(new_dstdays))     	    
+    tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(new_dstdays))
+    new_idiff = tmp_idiff  
+;###############################################################################
 ; define pass band frequencies
 ;###############################################################################  
 passband_l = idate0
@@ -532,23 +535,19 @@ endcase
 ; define filtering
 ;############################################################################### 
 coeff_ddyn    = digital_filter(passband_l/fn, passband_u/fn, 50, 18)
-
 coeff_dp2   = digital_filter(highpass_l/fn, 1.0, 50, 4)
 ;###############################################################################
 ; define disturbing effects
 ;############################################################################### 
 ddyn        = convol(diono, coeff_ddyn, /edge_wrap)
-
 dp2         = convol(diono, coeff_dp2, /edge_wrap)  
 ;###############################################################################      
-    new_ddyn = FLTARR(N_ELEMENTS(new_dstdays))     	
-    
+    new_ddyn = FLTARR(N_ELEMENTS(new_dstdays))     	    
     tmp_ddyn  = INTERPOL(ddyn, N_ELEMENTS(new_dstdays))
     new_ddyn = tmp_ddyn           
 ;###############################################################################
 ;############################################################################### 
-    new_dp2 = FLTARR(N_ELEMENTS(new_dstdays))     	
-    
+    new_dp2 = FLTARR(N_ELEMENTS(new_dstdays))     	    
     tmp_dp2  = INTERPOL(dp2, N_ELEMENTS(new_dstdays))
     new_dp2 = tmp_dp2         
 ;###############################################################################
@@ -558,20 +557,20 @@ dp2         = convol(diono, coeff_dp2, /edge_wrap)
         Device_bak2 = !D.Name 
         
         SET_PLOT, 'Z'      
-        tmp_spam = 1
         
-        Xsize=fix(1600*tmp_spam)
+        Xsize=fix(1600)
         Ysize=1000
-        DEVICE, SET_RESOLUTION = [Xsize,Ysize]
-        DEVICE, z_buffering=O
-        DEVICE, set_character_size = [10, 12]
-        SET_PLOT, 'X'          
-        DEVICE, RETAIN=2, DECOMPOSED=0     
+        DEVICE, SET_RESOLUTION = [Xsize,Ysize],Set_Pixel_Depth=24, DECOMPOSED=0  
+        DEVICE, z_buffer=1
+        DEVICE, set_character_size = [10, 12] 
+        
+        ;SET_PLOT, 'X'            
+        ;DEVICE, RETAIN=2
         chr_size1 = 0.9
         chr_thick1= 1.0
         space     = 0.015
         rojo      = 248
-        amarillo  = 220
+        amarillo  = 190
         verde     = 180
         negro     = 0
         azul      = 70
@@ -579,9 +578,9 @@ dp2         = convol(diono, coeff_dp2, /edge_wrap)
         gris      = 220
         morado    = 16
         
-    TVLCT, R_bak, G_bak, B_bak, /GET
+  ;  TVLCT, R_bak, G_bak, B_bak, /GET
         
-    LOADCT, 39, /SILENT
+    LOADCT, 0, /SILENT
      X_label   = STRARR(tw+1)+' '
         months    = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
         old_month = mh_i
@@ -615,6 +614,29 @@ case old_month of
 endcase             
 ;###############################################################################
 ;###############################################################################
+    spam_i = idate0
+case spam_i of
+    '200311' : spam_i = 1000
+    '200411' : spam_i = 50
+    '200505' : spam_i = 100
+    '201503' : spam_i = 0
+    '201705' : spam_i = 0
+    '201709' : spam_i = 100
+    else: print, 'fuera de rango'
+endcase 
+
+    spam_f = idate0
+case spam_f of
+    '200311' : spam_f = 3100
+    '200411' : spam_f = 4400
+    '200505' : spam_f = 800
+    '201503' : spam_f = 3300
+    '201705' : spam_f = 1440
+    '201709' : spam_f = 1880
+    else: print, 'fuera de rango'
+endcase    
+;############################################################################### 
+;###############################################################################
        days = intarr(tw+1)
        for i=0, n_elements(days)-1 do begin
             days[i] = dy_i+i
@@ -636,10 +658,8 @@ endcase
     BACKGROUND = blanco, color=negro, $
     CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA    
 
-
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   y = 0.95
-   
+   y = 0.95   
    XYOuts, X, y, window_title, /Normal, $
    color=negro, Alignment=0.5, Charsize=1.65               
 ;###############################################################################
@@ -652,16 +672,16 @@ endcase
     CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA,$
     /NOERASE
 
-    LOADCT, 0, /SILENT
+    ;LOADCT, 0, /SILENT
 
     POLYFILL, [passband_l, passband_u ,passband_u, passband_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=gris
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=amarillo
 
     POLYFILL, [highpass_l, fn ,fn, highpass_l], $
-              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=gris
+              [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=amarillo
     oplot, f_k, pws_s, color=negro, thick=5
 
-    LOADCT, 39, /SILENT
+    ;LOADCT, 0, /SILENT
         AXIS, XAXIS = 0, XRANGE=[min(f_k), fn], $
                          /xlog,$
                          xstyle=1,$
@@ -701,16 +721,48 @@ endcase
    XYOuts, X, 0.924, periodo, /Normal, $
    color=negro, Alignment=0.5, Charsize=1.0   
 ;###############################################################################
+;###############################################################################
+    med_idx = MEDIAN(new_idiff)
+    std_idx = stddev(new_idiff, /NAN)
+    
+    i_out = WHERE(new_idiff GE med_idx+std_idx OR new_idiff LE med_idx-std_idx)
+    i_in  = WHERE(new_idiff LE med_idx+std_idx AND new_idiff GE med_idx-std_idx)
+    id_diff_out = new_idiff
+    id_diff_out[i_in]=!Values.F_NAN
+    
+    id_diff_in  = new_idiff
+    id_diff_in[i_out]=!Values.F_NAN
+
+    sup0 = med_idx+std_idx
+    inf0 = med_idx-std_idx
+    
+    lim_sup = fltarr(n_elements(new_idiff))
+    lim_sup[*] = sup0
+
+    lim_inf = fltarr(n_elements(new_idiff))
+    lim_inf[*] = inf0   
+                    
+      
+    up_diono = max(diono)
+    down_diono = min(diono)
+
+    up_tecdiff = max(tec_diff) 
+    down_tecdiff = min(tec_diff)     
 ;###############################################################################         
      up = max(H)
      down=min(H)
      plot, tot_days, H, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
      POSITION=[0.55,0.73,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /noerase, title=''
+     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /NOERASE, THICK=3, /NODATA
+       
+    POLYFILL, [new_dstdays[i_out[0]+spam_i], new_dstdays[i_out[0]+spam_f] ,$
+              new_dstdays[i_out[0]+spam_f], new_dstdays[i_out[0]+spam_i]], $
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color=amarillo     
      
-     oplot, tot_days, dst, color=azul
-
+     OPLOT, new_dstdays, new_dst, COLOR=azul, THICK=3
+     OPLOT, new_dstdays, new_H, COLOR=negro, THICK=3  
+     
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
                          XMINOR=8, $
@@ -741,35 +793,7 @@ endcase
                          ystyle=2, $
                          CHARSIZE = 0.9;, $
 
-;###############################################################################
-;###############################################################################
-    med_idx = MEDIAN(new_idiff)
-    std_idx = stddev(new_idiff, /NAN)
-    
-    i_out = WHERE(new_idiff GE med_idx+std_idx*0.8 OR new_idiff LE med_idx-std_idx*0.8)
-    i_in  = WHERE(new_idiff LE med_idx+std_idx*0.8 AND new_idiff GE med_idx-std_idx*0.8)
-    id_diff_out = new_idiff
-    id_diff_out[i_in]=!Values.F_NAN
-    
-    id_diff_in  = new_idiff
-    id_diff_in[i_out]=!Values.F_NAN
-
-    sup0 = med_idx+std_idx
-    inf0 = med_idx-std_idx
-    
-    lim_sup = fltarr(n_elements(new_idiff))
-    lim_sup[*] = sup0
-
-    lim_inf = fltarr(n_elements(new_idiff))
-    lim_inf[*] = inf0   
-                    
-      
-    up_diono = max(diono)
-    down_diono = min(diono)
-
-    up_tecdiff = max(tec_diff) 
-    down_tecdiff = min(tec_diff)     
-     
+;###############################################################################      
      up_diono=max(diono)
      down_diono=min(diono)          
      plot, tot_days, diono, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
@@ -778,8 +802,16 @@ endcase
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_diono,up_diono], /NOERASE,$
      /NODATA
 
+       ; oplot, new_dstdays[i_out[0]+spam_i:i_out[0]+spam_f], $
+       ; id_diff_in[i_out[0]+spam_i:i_out[0]+spam_f], $
+        ;color=negro, linestyle=0, thick=4
+        
+        ;oplot, new_dstdays[i_out[0]+spam_i:i_out[0]+spam_f], $
+        ;id_diff_out[i_out[0]+spam_i:i_out[0]+spam_f], $
+        ;color=negro, linestyle=0, thick=4
+        
         oplot, new_dstdays, id_diff_in, color=negro, linestyle=3
-        oplot, new_dstdays, id_diff_out, color=negro, linestyle=0, thick=4
+        oplot, new_dstdays, id_diff_out, color=negro, linestyle=0, thick=4       
 ;###############################################################################
 ;###############################################################################
     med_tec = MEDIAN(new_tecdiff)
@@ -806,15 +838,11 @@ endcase
      CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.55,0.49,0.95,0.66], $
      XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
      /NOERASE, /NODATA, YRANGE=[down_tecdiff, up_tecdiff]
-
+    
+        tecdiff_inicio = index_out[0]        
         oplot, new_tecdays, tec_diff_in, color=rojo, linestyle=0
-        oplot, new_tecdays, tec_diff_out, color=rojo, linestyle=0, thick=4
-           
-    LOADCT, 0, /SILENT
-    oplot, tec_days, l_sup, color=gris, linestyle=2, thick=1
-    oplot, tec_days, l_inf, color=gris, linestyle=2, thick=1
-
-    LOADCT, 39, /SILENT       
+        ;oplot, new_tecdays[tecdiff_inicio:tecdiff_inicio+2880], tec_diff_out[tecdiff_inicio:tecdiff_inicio+2880], color=rojo, linestyle=0, thick=4
+        oplot, new_tecdays, tec_diff_out, color=rojo, linestyle=0, thick=4                
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
                          XTITLE=time_title, $                         
@@ -853,8 +881,8 @@ endcase
     med_ddyn = MEDIAN(new_ddyn)
     std_ddyn = stddev(new_ddyn, /NAN)
     
-    ddyn_out = WHERE(new_ddyn GE med_ddyn+std_ddyn*0.8 OR new_ddyn LE med_ddyn-std_ddyn*0.8)
-    ddyn_in  = WHERE(new_ddyn LE med_ddyn+std_ddyn*0.8 AND new_ddyn GE med_ddyn-std_ddyn*0.8)
+    ddyn_out = WHERE(new_ddyn GE med_ddyn+std_ddyn OR new_ddyn LE med_ddyn-std_ddyn)
+    ddyn_in  = WHERE(new_ddyn LE med_ddyn+std_ddyn AND new_ddyn GE med_ddyn-std_ddyn)
     
     ddyn_diff_out = new_ddyn
     ddyn_diff_out[ddyn_in]=!Values.F_NAN
@@ -884,7 +912,17 @@ endcase
      COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
      POSITION=[0.55,0.1,0.95,0.42], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /NOERASE, /NODATA
+    
+     ddyn_inicio = ddyn_out[150]
      
+       ; oplot, new_dstdays[ddyn_inicio:ddyn_inicio+spam_f], $
+       ; ddyn_diff_out[ddyn_inicio:ddyn_inicio+spam_f], color=negro, $
+       ; linestyle=0, thick=5   
+                    
+       ; oplot, new_dstdays[ddyn_inicio:ddyn_inicio+spam_f], $
+       ; ddyn_diff_in[ddyn_inicio:ddyn_inicio+spam_f], color=negro, linestyle=0, $
+       ; thick=5          
+
         oplot, new_dstdays, ddyn_diff_in, color=negro, linestyle=3
         oplot, new_dstdays, ddyn_diff_out, color=negro, linestyle=0, thick=5
 ;###############################################################################
@@ -893,8 +931,8 @@ endcase
     med_dp2 = MEDIAN(new_dp2)
     std_dp2 = stddev(new_dp2, /NAN)
     
-    dp2_out = WHERE(new_dp2 GE med_dp2+std_dp2*0.8 OR new_dp2 LE med_dp2-std_dp2*0.8)
-    dp2_in  = WHERE(new_dp2 LE med_dp2+std_dp2*0.8 AND new_dp2 GE med_dp2-std_dp2*0.8)
+    dp2_out = WHERE(new_dp2 GE med_dp2+std_dp2 OR new_dp2 LE med_dp2-std_dp2)
+    dp2_in  = WHERE(new_dp2 LE med_dp2+std_dp2 AND new_dp2 GE med_dp2-std_dp2)
     
     dp2_diff_out = new_dp2
     dp2_diff_out[dp2_in]=!Values.F_NAN
@@ -909,11 +947,21 @@ endcase
     lim_supdp2[*] = supdp2
 
     lim_infdp2 = fltarr(n_elements(new_dp2))
-    lim_infdp2[*] = infdp2   
-    
+    lim_infdp2[*] = infdp2       
+;###############################################################################
+    dp2_inicio = dp2_out[300]   
+;###############################################################################     
      ;oplot, tot_days, dp2, color=rojo
-        oplot, new_dstdays, dp2_diff_in, color=rojo, linestyle=1
-        oplot, new_dstdays, dp2_diff_out, color=rojo, linestyle=0, thick=4    
+      ;  oplot, new_dstdays[dp2_inicio+spam_i:dp2_inicio+spam_f], $
+       ; new_dp2[dp2_inicio+spam_i:dp2_inicio+spam_f], $
+;        color=rojo, linestyle=0, thick=4      
+        
+ ;       oplot, new_dstdays[dp2_inicio+spam_i:dp2_inicio+spam_f], $
+  ;      new_dp2[dp2_inicio+spam_i:dp2_inicio+spam_f], color=rojo, $
+   ;     linestyle=0, thick=4    
+        
+        oplot, new_dstdays, dp2_diff_in, color=rojo, linestyle=1         
+        oplot, new_dstdays, dp2_diff_out, color=rojo, linestyle=0, thick=4       
 
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
@@ -966,32 +1014,28 @@ endcase
 ;###############################################################################     
      Image=TVRD() 
     TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!    
-    TVLCT, R_bak, G_bak, B_bak
+    TVLCT, R_bak, G_bak, B_bak, /get  
         
     ;DEVICE, /CLOSE
     SET_PLOT, Device_bak2  
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-; open the post stript device
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
     path = '../rutidl/output/eventos_tgm/'
         IF keyword_set(jpeg) THEN BEGIN
                 info = size(Image)
                 nx = info[1]
                 ny = info[2]
                 true_image = bytarr(3,nx,ny)
-                true_image[0,*,*] = reds[image]
-                true_image[1,*,*] = greens[image]
-                true_image[2,*,*] = blues[image]
-                write_jpeg, path+'iono_resp_V2'+Date+'.jpg', True_Image, true=1
+                true_image[0,*,*] = R_bak[image]
+                true_image[1,*,*] = G_bak[image]
+                true_image[2,*,*] = B_bak[image]
+                write_jpeg, path+'iono_resp_V5_'+Date+'.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'iono_resp_V2'+Date+'.png', Image, reds,greens,blues
+                WRITE_PNG, path+'iono_resp_V5_'+Date+'.png', Image, R_bak, G_bak, B_bak
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'iono_resp_V2'+Date+'.png'
+                print, '        Saving: '+path+'iono_resp_V5_'+Date+'.png'
                 print, ''
         ENDIF
         RETURN 	
-end
-	
+end	
