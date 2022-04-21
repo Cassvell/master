@@ -1,4 +1,3 @@
-;
 ;Name:
 ;	get_data_date
 ;purpose:
@@ -246,7 +245,7 @@ function Date2DOY, idate
 	END
 	
 	
-pro iono_resp, r_dst, B_sq, DOY, date_i, date_f 
+pro iono_resp, r_dst, B_sq, DOY, date_i, date_f, JPEG = jpeg 
 
 	On_error, 2
 	compile_opt idl2, HIDDEN
@@ -499,23 +498,23 @@ print, 'Nyquist freq: ', fn, 'Hz'
 ;###############################################################################  
 passband_l = idate0
 case passband_l of
-    '200311' : passband_l = 1.22e-5
-    '200411' : passband_l = 1.32e-5
+    '200311' : passband_l = 1.2e-5
+    '200411' : passband_l = 1e-5
     '200505' : passband_l = 1.2e-5
-    '201503' : passband_l = 1.28e-5
-    '201705' : passband_l = 1.25e-5
-    '201709' : passband_l = 1.22e-5
+    '201503' : passband_l = 1.14e-5
+    '201705' : passband_l = 0.9e-5
+    '201709' : passband_l = 1.2e-5
     else: print, 'fuera de rango'
 endcase  
 
 passband_u = idate0
 case passband_u of
-    '200311' : passband_u = 1.5e-5
-    '200411' : passband_u = 1.55e-5
-    '200505' : passband_u = 1.42e-5
-    '201503' : passband_u = 1.6e-5
-    '201705' : passband_u = 1.55e-5
-    '201709' : passband_u = 1.58e-5
+    '200311' : passband_u = 3.2e-5
+    '200411' : passband_u = 2.5e-5
+    '200505' : passband_u = 2.8e-5
+    '201503' : passband_u = 2.8e-5
+    '201705' : passband_u = 3.2e-5
+    '201709' : passband_u = 3.4e-5
     else: print, 'fuera de rango'
 endcase  
 ;###############################################################################
@@ -560,12 +559,10 @@ dp2         = convol(diono, coeff_dp2, /edge_wrap)
         
         Xsize=fix(1600)
         Ysize=1000
-        DEVICE, SET_RESOLUTION = [Xsize,Ysize],Set_Pixel_Depth=24, DECOMPOSED=0  
-        DEVICE, z_buffer=1
+        DEVICE, SET_RESOLUTION = [Xsize,Ysize],Set_Pixel_Depth=24, DECOMPOSED=1  
+        DEVICE, z_buffer=4
         DEVICE, set_character_size = [10, 12] 
         
-        ;SET_PLOT, 'X'            
-        ;DEVICE, RETAIN=2
         chr_size1 = 0.9
         chr_thick1= 1.0
         space     = 0.015
@@ -575,12 +572,12 @@ dp2         = convol(diono, coeff_dp2, /edge_wrap)
         negro     = 0
         azul      = 70
         blanco    = 255
-        gris      = 220
+        gris      = 110
         morado    = 16
         
-  ;  TVLCT, R_bak, G_bak, B_bak, /GET
+    TVLCT, R_bak, G_bak, B_bak, /GET
         
-    LOADCT, 0, /SILENT
+    LOADCT, 39, /SILENT
      X_label   = STRARR(tw+1)+' '
         months    = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
         old_month = mh_i
@@ -644,14 +641,14 @@ endcase
        days = days*24/24. 
        day_time = findgen(24)   
 ;############################################################################### 
-    time_title = ' Tiempo universal (dias).'
+    time_title = ' Tiempo Universal ['+textoidl("dias")+' de '+old_month+'].'
     window_title = 'TGM'+ string(TGM_n, format='(I01)')+', '+ $
                     string(old_month, yr_i, format='(A, X, I4)')
 
-    plot_title1 = 'Espectro de potencias de la perturbacion ionosferica (Diono)'
-    plot_title2 = 'Perturbaciones Ionosfericas DP2 y DDyn'
+    plot_title1 = '';'Espectro de potencias de la perturbacion ionosferica (Diono)'
+    plot_title2 = '';'Perturbaciones Ionosfericas DP2 y DDyn'
     
-    periodo = 'Periodo (Hr)'        
+    periodo = 'Periodo (H)'        
 ;###############################################################################
 ;###############################################################################               
     plot, f_k, pws_s, /xlog, /ylog, POSITION=[0.07,0.1,0.95,0.9],$
@@ -672,7 +669,7 @@ endcase
     CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA,$
     /NOERASE
 
-    ;LOADCT, 0, /SILENT
+    LOADCT, 0, /SILENT
 
     POLYFILL, [passband_l, passband_u ,passband_u, passband_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=amarillo
@@ -681,19 +678,26 @@ endcase
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=amarillo
     oplot, f_k, pws_s, color=negro, thick=5
 
-    ;LOADCT, 0, /SILENT
+    LOADCT, 39, /SILENT
         AXIS, XAXIS = 0, XRANGE=[min(f_k), fn], $
                          /xlog,$
                          xstyle=1,$
-                         xTITLE = 'frecuencias [Hz]',$
+                         xTITLE = 'frecuencia [Hz]',$
                          COLOR=negro, $
                          CHARSIZE = 1.0, $
                          TICKLEN=0.04
       
-                         
-        AXIS, XAXIS = 1, XRANGE=[min(f_k), fn], $
+    freqs = [1.0/(96.0*3600.0), 1.0/(48.0*3600.0), 1.0/(24.0*3600.0), $
+              1.0/(12.0*3600.0), 1.0/(6.0*3600.0), 1.0/(3.0*3600.0)]
+               
+    periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0]
+                                           
+        AXIS, XAXIS = 1, XRANGE=[min(f_k), fn], $;.0/(!X.CRANGE), $
                          /xlog,$
-                         XTICKN=['27:46','02:46'],$
+                         XTICKS=6,$
+                         XMINOR=4,$
+                         XTICKV=freqs,$                         
+                         XTICKN=string(periods, format='(F4.1)'),$
                          xstyle=1,$
                          CHARSIZE = 1.0,$
                          COLOR=negro, $
@@ -759,7 +763,7 @@ endcase
     POLYFILL, [new_dstdays[i_out[0]+spam_i], new_dstdays[i_out[0]+spam_f] ,$
               new_dstdays[i_out[0]+spam_f], new_dstdays[i_out[0]+spam_i]], $
               [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color=amarillo     
-     
+     dH = TeXtoIDL('\DeltaH')              
      OPLOT, new_dstdays, new_dst, COLOR=azul, THICK=3
      OPLOT, new_dstdays, new_H, COLOR=negro, THICK=3  
      
@@ -774,15 +778,15 @@ endcase
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
-                         XTICKV=days,$
-                         XTICKN=fix(days),$                         
+                         XTICKV=fix(days),$
+                         ;XTICKN=fix(days),$                         
                          CHARSIZE = 0.8,$
                          XMINOR=8, $
                          COLOR=negro, $
                          TICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[down,up], $
-                         YTITLE = 'DH [nT]', $                          
+                         YTITLE = dH+' [nT]', $                          
                          COLOR=negro, $
                          ystyle=2, $
                          CHARSIZE = 0.9;, $
@@ -854,8 +858,8 @@ endcase
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
-                         XTICKV=days,$
-                         XTICKN=fix(days),$                         
+                         XTICKV=fix(days), $
+                         ;XTICKN=fix(days),$                         
                          XMINOR=8, $ 
                          CHARSIZE = 0.8, $                       
                          COLOR=negro, $
@@ -906,7 +910,7 @@ endcase
      downdp2   = min(dp2)     
 
     if upddyn gt updp2 then up = upddyn else up=updp2 
-    if downddyn gt downdp2 then down = down else down=downdp2 
+    if downddyn lt downdp2 then down = downddyn else down=downdp2 
                                
      plot, tot_days, ddyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
@@ -975,8 +979,8 @@ endcase
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
                          XMINOR=8, $
-                         XTICKV=days,$
-                         XTICKN=fix(days),$  
+                         XTICKV=fix(days), $
+                        ; XTICKN=fix(days),$  
                          CHARSIZE = 0.8, $                                                
                          COLOR=negro, $
                          TICKLEN=0.04
@@ -994,21 +998,20 @@ endcase
                          CHARSIZE = 0.9;, $      
 ;###############################################################################    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.921, 'Tiempo Local (dias)', /Normal, $
+   XYOuts, X, 0.921, 'Tiempo Local', /Normal, $
    color=negro, Alignment=0.5, Charsize=0.9  
 
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.679, 'Tiempo Local (dias)', /Normal, $
+   XYOuts, X, 0.679, 'Tiempo Local', /Normal, $
    color=negro, Alignment=0.5, Charsize=0.9  
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.441, 'Tiempo Local (dias)', /Normal, $
+   XYOuts, X, 0.441, 'Tiempo Local', /Normal, $
    color=negro, Alignment=0.5, Charsize=0.9  
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    XYOuts, X, 0.035, plot_title2, /Normal, $
-   color=negro, Alignment=0.5, Charsize=1.45  
-    LOADCT, 39, /SILENT     
+   color=negro, Alignment=0.5, Charsize=1.45     
 ;###############################################################################
 ; saving png
 ;###############################################################################     
@@ -1027,14 +1030,14 @@ endcase
                 true_image[0,*,*] = R_bak[image]
                 true_image[1,*,*] = G_bak[image]
                 true_image[2,*,*] = B_bak[image]
-                write_jpeg, path+'iono_resp_V5_'+Date+'.jpg', True_Image, true=1
+                write_jpeg, path+'iono_resp_V6_'+Date+'.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'iono_resp_V5_'+Date+'.png', Image, R_bak, G_bak, B_bak
+                WRITE_PNG, path+'iono_resp_V6_'+Date+'.png', Image, R_bak, G_bak, B_bak
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'iono_resp_V5_'+Date+'.png'
+                print, '        Saving: '+path+'iono_resp_V6_'+Date+'.png'
                 print, ''
         ENDIF
         RETURN 	
