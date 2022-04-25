@@ -570,7 +570,8 @@ dp2         = convol(diono, coeff_dp2, /edge_wrap)
         blanco    = 255
         gris      = 110
         morado    = 16
-        
+        naranja  = 220
+                
     TVLCT, R_bak, G_bak, B_bak, /GET
         
     LOADCT, 39, /SILENT
@@ -622,7 +623,7 @@ endcase
 case spam_f of
     '200311' : spam_f = 2800
     '200411' : spam_f = 4400
-    '200505' : spam_f = 800
+    '200505' : spam_f = 1800
     '201503' : spam_f = 3300
     '201705' : spam_f = 1440
     '201709' : spam_f = 1880
@@ -638,28 +639,28 @@ endcase
        day_time = findgen(24)   
 ;############################################################################### 
     time_title = ' Tiempo Universal ['+textoidl("dias")+' de '+old_month+'].'
-    window_title = 'TGM'+ string(TGM_n, format='(I01)')+', '+ $
-                    string(old_month, yr_i, format='(A, X, I4)')
+    window_title = 'TGM'+ STRING(TGM_n, FORMAT='(I01)')+', '+ $
+                    STRING(old_month, yr_i, FORMAT='(A, X, I4)')
     
-    periodo = 'Periodo (H)'        
+    periodo = 'Periodo [h]'        
 ;###############################################################################
 ;###############################################################################               
-    plot, f_k, pws_s, /xlog, /ylog, POSITION=[0.07,0.1,0.95,0.9],$
-    BACKGROUND = blanco, color=negro, $
-    CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA    
+    PLOT, f_k, pws_s, /XLOG, /YLOG, POSITION=[0.07,0.1,0.95,0.9],$
+    BACKGROUND = blanco, COLOR=negro, $
+    CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=4, /NODATA    
 
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    y = 0.95   
-   XYOuts, X, y, window_title, /Normal, $
-   color=negro, Alignment=0.5, Charsize=1.65               
+   XYOUTS, X, y, window_title, /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65               
 ;###############################################################################
 ;###############################################################################           
-    ysup = max(pws)+10
-    yinf = min(pws)-0.0001
+    ysup = MAX(pws)+10
+    yinf = MIN(pws)-0.0001
     
-    plot, f_k, pws_s, /xlog, /ylog, xrange = [min(f_k), fn], POSITION=[0.07,0.1,0.45,0.9],$
-    yrange=[yinf, ysup], BACKGROUND = blanco, color=negro, $
-    CHARSIZE = chr_size1, xstyle=5, ystyle=5, subtitle='', thick=4, /NODATA,$
+    PLOT, f_k, pws_s, /XLOG, /YLOG, XRANGE = [min(f_k), fn], POSITION=[0.07,0.1,0.45,0.9],$
+    YRANGE=[yinf, ysup], BACKGROUND = blanco, COLOR=negro, $
+    CHARSIZE = chr_size1, XSTYLE=5, YSTYLE=5, SUBTITLE='', THICK=4, /NODATA,$
     /NOERASE
 
     LOADCT, 0, /SILENT
@@ -669,12 +670,12 @@ endcase
 
     POLYFILL, [highpass_l, fn ,fn, highpass_l], $
               [!Y.CRANGE[0], !Y.CRANGE[0], ysup, ysup], color=amarillo
-    oplot, f_k, pws_s, color=negro, thick=5
+    OPLOT, f_k, pws_s, COLOR=negro, THICK=5
 
     LOADCT, 39, /SILENT
         AXIS, XAXIS = 0, XRANGE=[min(f_k), fn], $
-                         /xlog,$
-                         xstyle=1,$
+                         /XLOG,$
+                         XSTYLE=1,$
                          xTITLE = 'frecuencia [Hz]',$
                          COLOR=negro, $
                          CHARSIZE = 1.0, $
@@ -686,12 +687,12 @@ endcase
     periods = [96.0, 48.0, 24.0, 12.0, 6.0, 3.0]
                                            
         AXIS, XAXIS = 1, XRANGE=[min(f_k), fn], $;.0/(!X.CRANGE), $
-                         /xlog,$
+                         /XLOG,$
                          XTICKS=6,$
                          XMINOR=4,$
                          XTICKV=freqs,$                         
-                         XTICKN=string(periods, format='(F4.1)'),$
-                         xstyle=1,$
+                         XTICKN=STRING(periods, FORMAT='(F4.1)'),$
+                         XSTYLE=1,$
                          CHARSIZE = 1.0,$
                          COLOR=negro, $
                          TICKLEN=0.04                     
@@ -730,13 +731,15 @@ endcase
     down_diono = min(diono)
 
     up_tecdiff = max(tec_diff) 
-    down_tecdiff = min(tec_diff)     
+    down_tecdiff = min(tec_diff)  
+                       
 ;###############################################################################         
-     up = max(H)
-     down=min(H)
+     up = max(H-p_a)
+     down=min(H-p_a)
+     print, up, down
      plot, tot_days, H, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
-     POSITION=[0.55,0.73,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
+     POSITION=[0.55,0.1,0.95,0.27], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
      XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /NOERASE, THICK=3, /NODATA
 
 ;###############################################################################
@@ -755,58 +758,12 @@ endcase
     POLYFILL, [new_dstdays[diono_i+spam_i], new_dstdays[diono_i+spam_f] ,$
               new_dstdays[diono_i+spam_f], new_dstdays[diono_i+spam_i]], $
               [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], color=amarillo     
-     dH = TeXtoIDL('\DeltaH')              
-     OPLOT, new_dstdays, new_dst, COLOR=azul, THICK=3
-     OPLOT, new_dstdays, new_H, COLOR=verde, THICK=3  
-     
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKNAME=X_label, $
-                         XTITLE=time_title, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.9, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
-                         XTICKS=tw, $
-                         XTICKV=fix(days),$                        
-                         CHARSIZE = 0.8,$
-                         XMINOR=8, $
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down,up], $
-                         YTITLE = dH+' y Dst [nT]', $                          
-                         COLOR=negro, $
-                         ystyle=2, $
-                         CHARSIZE = 0.9;, $
-                        
-        AXIS, YAXIS = 1, YRANGE=[down,up], $
-                        ; YTITLE = 'Dst [nT]', $         
-                         COLOR=negro, $
-                         ystyle=2, $
-                         CHARSIZE = 0.9;, $
-
+     dH = TeXtoIDL('\DeltaH') 
+     dst_l = TexToIDL('Dst(\lambda)')
+                
+     dst_ld = new_dst*ld
+     OPLOT, new_dstdays, new_H-dst_ld, COLOR=naranja, THICK=3   
 ;###############################################################################      
-     up_diono=max(diono)
-     down_diono=min(diono)          
-     plot, tot_days, diono, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
-     COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.55,0.49,0.95,0.66], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_diono,up_diono], /NOERASE,$
-     /NODATA
-
-        oplot, new_dstdays[diono_i+spam_i:diono_i+spam_f], $
-        id_diff_in[diono_i+spam_i:diono_i+spam_f], color=negro, linestyle=0, thick=4
-        
-        oplot, new_dstdays[diono_i+spam_i:diono_i+spam_f], $
-        id_diff_out[diono_i+spam_i:diono_i+spam_f], color=negro, linestyle=0, thick=4
-        
-        oplot, new_dstdays, id_diff_in, color=negro, linestyle=3
-        oplot, new_dstdays, id_diff_out, color=negro, linestyle=0, thick=4       
-;###############################################################################
-;###############################################################################
     med_tec = MEDIAN(new_tecdiff)
     std_tec = stddev(new_tecdiff)
     
@@ -828,7 +785,7 @@ endcase
     l_inf[*] = inf   
        
     plot, tec_days, tec_diff, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=azul,$
-     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.55,0.49,0.95,0.66], $
+     CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.55,0.1,0.95,0.27], $
      XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
      /NOERASE, /NODATA, YRANGE=[down_tecdiff, up_tecdiff]
     
@@ -846,7 +803,58 @@ endcase
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
-                         XTICKV=fix(days), $                        
+                         XTICKV=FIX(days), $       
+                         XTICKN=STRING(days, FORMAT='(I02)'), $                                            
+                         XMINOR=8, $ 
+                         CHARSIZE = 0.8, $                       
+                         COLOR=negro, $
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down,up], $
+                         YTITLE = dH+'-'+dst_l+' [nT]', $                          
+                         COLOR=naranja, $
+                         CHARTHICK=2,$
+                         YSTYLE=2, $
+                         CHARSIZE = 0.9;, $
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_tecdiff, up_tecdiff], $
+                         YTITLE = 'TEC-<TEC> [TECu]', $          
+                         COLOR=morado, $
+                         CHARTHICK=2,$                         
+                         YSTYLE=2, $
+                         CHARSIZE = 0.9;, $                                         
+;###############################################################################
+;############################################################################### 
+     up_diono=max(diono)
+     down_diono=min(diono)          
+     plot, tot_days, diono, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
+     COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
+     POSITION=[0.55,0.73,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
+     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down_diono,up_diono], /NOERASE,$
+     /NODATA
+
+        OPLOT, new_dstdays[diono_i+spam_i:diono_i+spam_f], $
+        id_diff_in[diono_i+spam_i:diono_i+spam_f], COLOR=negro, LINESTYLE=0, THICK=4
+        
+        oplot, new_dstdays[diono_i+spam_i:diono_i+spam_f], $
+        id_diff_out[diono_i+spam_i:diono_i+spam_f], COLOR=negro, LINESTYLE=0, THICK=4
+        
+        OPLOT, new_dstdays, id_diff_in, COLOR=negro, LINESTYLE=3
+        OPLOT, new_dstdays, id_diff_out, COLOR=negro, LINESTYLE=0, THICK=4   
+        
+        AXIS, XAXIS = 0, XRANGE=[0,tw], $
+                         XTICKS=tw, $
+                         XTITLE=time_title, $                         
+                         XMINOR=8, $
+                         XTICKNAME=X_label, $
+                         COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         TICKLEN=0.04
+                         
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
+                         XTICKS=tw, $
+                         XTICKV=FIX(days), $       
+                         XTICKN=STRING(days, FORMAT='(I02)'), $                                            
                          XMINOR=8, $ 
                          CHARSIZE = 0.8, $                       
                          COLOR=negro, $
@@ -855,14 +863,13 @@ endcase
         AXIS, YAXIS = 0, YRANGE=[down_diono,up_diono], $
                          YTITLE = 'Diono [nT]', $                          
                          COLOR=negro, $
-                         ystyle=2, $
+                         YSTYLE=2, $
                          CHARSIZE = 0.9;, $
                         
-        AXIS, YAXIS = 1, YRANGE=[down_tecdiff, up_tecdiff], $
-                         YTITLE = 'TEC-<TEC> [TECu]', $          
-                         COLOR=morado, $
-                         ystyle=2, $
-                         CHARSIZE = 0.9;, $                                               
+        AXIS, YAXIS = 1, YRANGE=[down_diono,up_diono], $      
+                         COLOR=negro, $
+                         YSTYLE=2, $
+                         CHARSIZE = 0.9;, $                    
 ;###############################################################################
 ;###############################################################################                
     if max(ddyn) gt max(dp2) then up = max(ddyn) else up = max(dp2)
@@ -887,57 +894,57 @@ endcase
      updp2     = max(dp2)
      downdp2   = min(dp2)     
 
-    if upddyn gt updp2 then up = upddyn else up=updp2 
-    if downddyn lt downdp2 then down = downddyn else down=downdp2 
+    IF upddyn GT updp2 THEN up = upddyn ELSE up=updp2 
+    IF downddyn LT downdp2 THEN down = downddyn ELSE down=downdp2 
                                
-     plot, tot_days, ddyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
+     PLOT, tot_days, ddyn, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
-     POSITION=[0.55,0.1,0.95,0.42], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], /NOERASE, /NODATA
+     POSITION=[0.55,0.34,0.95,0.66], XSTYLE = 5, XRANGE=[0, tw], YSTYLE = 6,$
+     XTICKNAME=REPLICATE(' ', tw+1), YRANGE=[down,up], /NOERASE, /NODATA
 ;###############################################################################
     ddyn_i = idate0
-case ddyn_i of
+CASE ddyn_i of
     '200311' : ddyn_i = ddyn_out[0]
     '200411' : ddyn_i = ddyn_out[0]
     '200505' : ddyn_i = ddyn_out[100]
     '201503' : ddyn_i = ddyn_out[0]
     '201705' : ddyn_i = ddyn_out[0]
     '201709' : ddyn_i = ddyn_out[0]
-    else: print, 'fuera de rango'
-endcase 
+    ELSE: PRINT, 'fuera de rango'
+ENDCASE 
 
     ddyn_si = idate0
-case ddyn_si of
+CASE ddyn_si of
     '200311' : ddyn_si = -200
     '200411' : ddyn_si = -100
     '200505' : ddyn_si = -160
     '201503' : ddyn_si = -100
     '201705' : ddyn_si = -130
     '201709' : ddyn_si = -180
-    else: print, 'fuera de rango'
-endcase 
+    ELSE: PRINT, 'fuera de rango'
+ENDCASE 
 
     ddyn_sf = idate0
-case ddyn_sf of
+CASE ddyn_sf of
     '200311' : ddyn_sf = -800
     '200411' : ddyn_sf = 300
-    '200505' : ddyn_sf = 230
+    '200505' : ddyn_sf = 470
     '201503' : ddyn_sf = 170
     '201705' : ddyn_sf = 280
     '201709' : ddyn_sf = 350
-    else: print, 'fuera de rango'
-endcase      
+    ELSE: PRINT, 'fuera de rango'
+ENDCASE       
 ;###############################################################################      
-        oplot, new_dstdays[ddyn_i+ddyn_si:ddyn_i+spam_f+ddyn_sf], $
+        OPLOT, new_dstdays[ddyn_i+ddyn_si:ddyn_i+spam_f+ddyn_sf], $
         ddyn_diff_out[ddyn_i+ddyn_si:ddyn_i+spam_f+ddyn_sf], $
-        color=negro, linestyle=0, thick=5   
+        COLOR=negro, LINESTYLE=0, THICK=5   
                     
-        oplot, new_dstdays[ddyn_i+ddyn_si:ddyn_i+spam_f+ddyn_sf], $
+        OPLOT, new_dstdays[ddyn_i+ddyn_si:ddyn_i+spam_f+ddyn_sf], $
         ddyn_diff_in[ddyn_i+ddyn_si:ddyn_i+spam_f+ddyn_sf], $
-        color=negro, linestyle=0, thick=5          
+        COLOR=negro, LINESTYLE=0, THICK=5            
 
-        oplot, new_dstdays, ddyn_diff_in, color=negro, linestyle=3
-        oplot, new_dstdays, ddyn_diff_out, color=negro, linestyle=0, thick=5
+        OPLOT, new_dstdays, ddyn_diff_in, COLOR=negro, LINESTYLE=3
+        OPLOT, new_dstdays, ddyn_diff_out, COLOR=negro, LINESTYLE=0, THICK=5
 ;###############################################################################
 ;###############################################################################     
 ;###############################################################################
@@ -1012,8 +1019,8 @@ linestyle=0, thick=4
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
                          XMINOR=8, $
-                         XTICKV=fix(days), $
-                        ; XTICKN=fix(days),$  
+                         XTICKV=FIX(days), $       
+                         XTICKN=STRING(days, FORMAT='(I02)'), $  
                          CHARSIZE = 0.8, $                                                
                          COLOR=negro, $
                          TICKLEN=0.04
@@ -1043,22 +1050,27 @@ linestyle=0, thick=4
    color=negro, Alignment=0.5, Charsize=0.9   
 ;###############################################################################     
 ;first panel legend
-        POLYFILL, [0.79,0.82,0.82,0.79], [0.748,0.748,0.750,0.750], color = azul, /NORMAL
-        POLYFILL, [0.88,0.91,0.91,0.88], [0.748,0.748,0.750,0.750], color = verde, /NORMAL        
+      ;  POLYFILL, [0.79,0.82,0.82,0.79], [0.748,0.748,0.750,0.750], color = azul, /NORMAL
+      ;  POLYFILL, [0.88,0.91,0.91,0.88], [0.748,0.748,0.750,0.750], color = verde, /NORMAL        
 
-        XYOUTS, 0.797, 0.743 , /NORMAL, $
-                '      Dst,               '+dH, COLOR=negro, $
-                CHARSIZE = 0.9, $
-                CHARTHICK=chr_thick1      
+      ;  XYOUTS, 0.797, 0.743 , /NORMAL, $
+      ;          '      Dst,               '+dH, COLOR=negro, $
+      ;          CHARSIZE = 0.9, $
+      ;          CHARTHICK=chr_thick1      
                 
 ;third panel legend
-        POLYFILL, [0.79,0.82,0.82,0.79], [0.125,0.125,0.127,0.127], color = rojo, /NORMAL
-        POLYFILL, [0.88,0.91,0.91,0.88], [0.125,0.125,0.127,0.127], color = negro, /NORMAL        
+        POLYFILL, [0.88,0.91,0.91,0.88], [0.405,0.405,0.407,0.407], color = rojo, /NORMAL
+        POLYFILL, [0.88,0.91,0.91,0.88], [0.375,0.375,0.377,0.377], color = negro, /NORMAL        
 
-        XYOUTS, 0.797, 0.12 , /NORMAL, $
-                '      DP2,               Ddyn', COLOR=negro, $
+        XYOUTS, 0.91, 0.4 , /NORMAL, $
+                ' DP2', COLOR=negro, $
                 CHARSIZE = chr_size1, $
-                CHARTHICK=chr_thick1                   
+                CHARTHICK=chr_thick1 
+
+        XYOUTS, 0.91, 0.37 , /NORMAL, $
+                ' Ddyn', COLOR=negro, $
+                CHARSIZE = chr_size1, $
+                CHARTHICK=chr_thick1                                    
 ;###############################################################################
 ; saving png
 ;###############################################################################     
