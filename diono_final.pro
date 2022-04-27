@@ -113,6 +113,136 @@ function DH_teo, date
 end
 
 
+function kmex, date
+	On_error, 2
+	compile_opt idl2, HIDDEN
+
+	year	= date[0]
+	month	= date[1]
+	day 	= date[2]	
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;reading data files
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+        date = string(year, month, day, format = '(I4, I02, I02)')
+       ; sts = string(stat, format='(A5)')
+		
+		name = 'teo_'+date+'.index.'
+		
+		file_name = '../rutidl/Kmex/'+name+'final'
+       ; file_name = '../rutidl/ip/'+yr+'-'+mt+'-'+dy+'.csv'		
+		
+		file = FILE_SEARCH(file_name, COUNT=opened_files)
+	    IF opened_files NE N_ELEMENTS(file) THEN begin
+	        file_name = '../rutidl/Kmex/'+name+'early'
+	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
+    	    IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  
+	    
+	    endif
+
+		number_of_lines = FILE_LINES(file)
+	   ; print, number_of_lines
+		data = STRARR(number_of_lines)
+
+		openr, lun, file, /GET_LUN, ERROR=err
+		IF err NE 0 THEN MESSAGE, 'Error opening '+file_name[0]
+		readf, lun, data, FORMAT = '(A)'
+		CLOSE, lun
+		FREE_LUN, lun
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;extracting data and denfining an structure data
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-        
+        idx_kmex      = {k_mex      : intarr(8), $
+                         k_mex_sum  : 0, $
+                         a_mex      : intarr(8), $
+                         a_med      : 0}
+        
+        struct = {x : [0, 0, 0, 0, 0, 0, 0, 0], y : 0}
+        
+        tmp_var = replicate(struct, 2)
+
+	;	idx_kmex = REPLICATE(DStruct, number_of_lines-header)	
+  
+		READS, data, tmp_var, FORMAT='(I3, I4, I4, I4, I4, I4, I4, I4, I4)'
+		
+		idx_kmex.k_mex[*]   = tmp_var[0].x
+		idx_kmex.a_mex[*]   = tmp_var[1].x
+        idx_kmex.k_mex_sum  = tmp_var[0].y
+        idx_kmex.a_med      = tmp_var[1].y		
+		
+		return, idx_kmex	
+end
+
+function kp_data, in
+
+	On_error, 2
+	compile_opt idl2, HIDDEN
+
+        header = 36             ; Defining number of lines of the header 
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;reading data files
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+        year = string(in, format = '(I4)')
+		file_name = '../rutidl/kp/Kp_'+ year+'-01-01_'+year+'-12-31_D.dat'
+		
+		file = FILE_SEARCH(file_name, COUNT=opened_files)
+
+	    IF opened_files NE N_ELEMENTS(file) THEN begin
+	        file_name = '../rutidl/kp/Kp_'+ year+'-01-01_'+year+'-12-31_P.dat'
+	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
+    	    IF opened_files NE N_ELEMENTS(file) THEN begin
+    	        file_name = '../rutidl/kp/Kp_'+ year+'-01-01_'+year+'-12-31_Q.dat'
+	            file = FILE_SEARCH(file_name, COUNT=opened_files)    	        
+    	        IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  
+    	    ENDIF    	    	    
+	    ENDIF     
+        
+		number_of_lines = FILE_LINES(file)
+		data = STRARR(number_of_lines)
+
+		openr, lun, file, /GET_LUN, ERROR=err
+		readf, lun, data, FORMAT = '(A)'
+		CLOSE, lun
+		FREE_LUN, lun
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;extracting data and denfining an structure data
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+
+        DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, $
+                      DOY : 0, Kp: 0, Kp_str: '', Ap: 0}
+
+		resulting_data0 = REPLICATE(DataStruct, number_of_lines-header)	
+        ;print, number_of_lines-header-1, number_of_lines-header+1
+        
+        
+		READS, data[header:number_of_lines-1], resulting_data0, $
+		FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,8X,I3,X,I1,A1,X,I3)'
+		
+		indexes_07 = WHERE(resulting_data0[*].Kp_str EQ '-')
+		indexes_03 = WHERE(resulting_data0[*].Kp_str EQ '+')
+		indexes_00 = WHERE(resulting_data0[*].Kp_str EQ 'o')
+		
+		Kp_tmp = resulting_data0[*].Kp*10
+		
+		Kp_tmp[indexes_07] = Kp_tmp[indexes_07]-3
+		Kp_tmp[indexes_03] = Kp_tmp[indexes_03]+3
+
+
+                DataStruct2 = {year : 0, month : 0, day : 0, hour : 0, minute: 0, $
+                      DOY : 0, Kp: 0, Ap: 0}
+
+		resulting_data = REPLICATE(DataStruct2, number_of_lines-header)	
+
+		resulting_data[*].year   = resulting_data0[*].year
+		resulting_data[*].month  = resulting_data0[*].month
+		resulting_data[*].day    = resulting_data0[*].day
+		resulting_data[*].hour   = resulting_data0[*].hour
+		resulting_data[*].minute = resulting_data0[*].minute
+		resulting_data[*].DOY    = resulting_data0[*].DOY
+		resulting_data[*].Kp     = Kp_tmp[*]
+		resulting_data[*].Ap     = resulting_data0[*].AP				
+		return, resulting_data
+end  
+
 
 function baseline_sq, date
 	On_error, 2
@@ -213,7 +343,7 @@ function Date2DOY, idate
 	END
 	
 	
-pro diono_final, r_dst, B_sq, DOY, date_i, date_f, JPEG = jpeg 
+pro diono_final, r_dst, r_kp, B_sq, DOY, date_i, date_f, JPEG = jpeg 
 
 	On_error, 2
 	compile_opt idl2, HIDDEN
@@ -248,7 +378,10 @@ endcase
     d_dst = dst_data(yr_i)
     t = n_elements(d_dst.year)    
     i_dst = d_dst.Dst
-   
+;###############################################################################   
+    d_kp = kp_data(yr_i)     
+    i_ap = d_kp.Ap       
+;###############################################################################     
     year = d_dst.year
     tiempo = TIMEGEN(t, START=julday(d_dst.month[0], d_dst.day[0],  $
                      d_dst.year[0], d_dst.hour[0]), UNITS='Hours')  
@@ -265,14 +398,19 @@ endcase
     
     dst     = i_dst[(idoy*24)-24:fdoy*24-1]    
     Date    = string(year[0], mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
+    
+    ap      =  i_ap[(idoy*8)-8:fdoy*8-1] 
 ;###############################################################################
 ; define DH variables
 ;###############################################################################
        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
-               
-        data_file_name_dh  = strarr(file_number)        
-        string_date_dh        = strarr(file_number)
-       
+        string_date        = STRARR(file_number)    
+                   
+        data_file_name_dh  = strarr(file_number)
+        data_file_name_km  = strarr(file_number)
+        
+        string_date        = strarr(file_number)
+        
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -280,23 +418,31 @@ endcase
                 tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
-                string_date_dh[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
-        
-                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date_dh[i]+'.dst.early'
-		        file_dh = FILE_SEARCH(data_file_name_dh[i], COUNT=opened_files)
+                string_date[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
+                
+                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'
+                data_file_name_km[i] = '../rutidl/Kmex/'+'teo_'+string_date[i]+'.index.final'
 		        
-	            IF opened_files NE N_ELEMENTS(file_dh) THEN begin
-	                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date_dh[i]+'.dst.early'    
-	            ENDIF
-	                                        
+		        file = FILE_SEARCH(data_file_name_km[i], COUNT=opened_files)
+	            IF opened_files NE N_ELEMENTS(file) THEN begin
+	                data_file_name_km[i] = '../rutidl/Kmex/'+'teo_'+string_date[i]+'.index.early'    
+	            ENDIF 	                            
         ENDFOR
 
         exist_data_file_dh   = FILE_TEST(data_file_name_dh)
         capable_to_plot_dh   = N_ELEMENTS(where(exist_data_file_dh EQ 1))
+
+        exist_data_file_km   = FILE_TEST(data_file_name_km)
+        capable_to_plot_km   = N_ELEMENTS(where(exist_data_file_km EQ 1))
         
         IF capable_to_plot_dh NE N_ELEMENTS(data_file_name_dh) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
                 PRINT, FORMAT="('                missing GMS_YYYYMMDD.dh_index.',A,' impossible to plot all data.')"              
+        ENDIF
+
+        IF capable_to_plot_km NE N_ELEMENTS(data_file_name_km) THEN BEGIN 
+                PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.tec_index.',A,' impossible to plot all data.')"              
         ENDIF
                         
         H    = FLTARR(file_number*24)                       
@@ -305,7 +451,7 @@ endcase
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
-                        READS, string_date_dh[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
+                        READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
                         d_dh = DH_teo([tmp_year, tmp_month, tmp_day])
                         
                         H[i*24:(i+1)*24-1] = d_dh.H[*]
@@ -313,8 +459,23 @@ endcase
                 ENDIF ELSE BEGIN
                         H[i*24:(i+1)*24-1] = 999999.0
                 ENDELSE                
-        ENDFOR        
+        ENDFOR
         
+        k_mex    = fltarr(file_number*8)
+        a_mex    = INTARR(file_number*8)
+        FOR i = 0, N_ELEMENTS(exist_data_file_km)-1 DO BEGIN
+                IF exist_data_file_km[i] EQ 1 THEN BEGIN
+                        tmp_year    = 0
+                        tmp_month   = 0
+                        tmp_day     = 0
+                        READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'                 
+                        d_km = kmex([tmp_year, tmp_month, tmp_day])
+                        
+                        k_mex[i*8:(i+1)*8-1] = d_km.k_mex[*]
+                        a_mex[i*8:(i+1)*8-1] = d_km.a_mex[*]
+                ENDIF             
+        ENDFOR
+    k_days = findgen(tw*8)/8.0 
         i_nan1 = where(H eq 999999.0, ncount)
         i_nan2 = where(H gt 100.0, n2count)
         
@@ -331,7 +492,7 @@ endcase
             if H[i] ge 100.0 then begin
                 H[where(H[*] ge 100.0)] = !Values.F_NAN          
             endif
-        endfor        
+        endfor                
     ;implementar una función de interpolación en caso de que el porcentaje de 
     ;nan sea muy bajo
        
@@ -342,17 +503,7 @@ endcase
     if nbaddata gt 0 then H_tmp[baddata] = interpol(H_tmp[H_exist], H_exist, baddata)
     H = H_tmp
 ;###############################################################################      
-;###############################################################################
-    new_dstdays = findgen(tw*1440)/1440.0 ;se genera un arreglo de tiempo con 
-;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
-    
-    new_dst = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_dst  = INTERPOL(dst, N_ELEMENTS(new_dstdays))
-    new_dst = tmp_dst 
-    
-    new_H = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_H  = INTERPOL(H, N_ELEMENTS(new_dstdays))
-    new_H = tmp_H     
+;###############################################################################   
 ;############################################################################### 
 ; define diurnal baseline
 ;###############################################################################  
@@ -399,11 +550,6 @@ pws_s   = smooth(pws, 1)
 f_k     = (1+findgen(n))/(n*time)
 print, 'Nyquist freq: ', fn, 'Hz'
 ;###############################################################################
-    i_diff = diono
-    new_idiff = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(new_dstdays))
-    new_idiff = tmp_idiff  
-;###############################################################################
 ; define pass band frequencies
 ;###############################################################################  
 passband_l = idate0
@@ -449,16 +595,7 @@ coeff_dp2   = digital_filter(highpass_l/fn, 1.0, 50, 4)
 ; define disturbing effects
 ;############################################################################### 
 ddyn        = convol(diono, coeff_ddyn, /edge_wrap)
-dp2         = convol(diono, coeff_dp2, /edge_wrap)  
-;###############################################################################      
-    new_ddyn = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_ddyn  = INTERPOL(ddyn, N_ELEMENTS(new_dstdays))
-    new_ddyn = tmp_ddyn           
-;###############################################################################
-;############################################################################### 
-    new_dp2 = FLTARR(N_ELEMENTS(new_dstdays))     	    
-    tmp_dp2  = INTERPOL(dp2, N_ELEMENTS(new_dstdays))
-    new_dp2 = tmp_dp2         
+dp2         = convol(diono, coeff_dp2, /edge_wrap)        
 ;###############################################################################
 ;###############################################################################
 ; define device and color parameters 
@@ -558,62 +695,23 @@ endcase
        
 ;###############################################################################
 ;###############################################################################                    
-;############################################################################### 
-     up=max(diono-ddyn)
-     down=min(diono-ddyn)          
-     plot, tot_days, diono-ddyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
-     COLOR=negro, CHARSIZE = 0.6, CHARTHICK=chr_thick1, $
-     POSITION=[0.1,0.63,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], THICK=4
-
-        OPLOT, tot_days,   dp2, COLOR=rojo, LINESTYLE=0, THICK=4
-        
-        
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XTITLE=time_title, $                         
-                         XMINOR=8, $
-                         XTICKNAME=X_label, $
-                         COLOR=negro, $
-                         CHARSIZE = 0.9, $
-                         TICKLEN=0.04
-                         
-        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
-                         XTICKS=tw, $
-                         XTICKV=FIX(days), $       
-                         XTICKN=STRING(days, FORMAT='(I02)'), $                                            
-                         XMINOR=8, $ 
-                         CHARSIZE = 0.8, $                       
-                         COLOR=negro, $
-                         TICKLEN=0.04
-
-        AXIS, YAXIS = 0, YRANGE=[down,up], $
-                         YTITLE = 'Diono [nT]', $                          
-                         COLOR=negro, $
-                         YSTYLE=2, $
-                         CHARSIZE = 0.9;, $
-                        
-        AXIS, YAXIS = 1, YRANGE=[down,up], $      
-                         COLOR=negro, $
-                         YSTYLE=2, $
-                         CHARSIZE = 0.9;, $                    
-;###############################################################################
 ;###############################################################################                                    
      up = max(H)
      down=min(H)
      print, up, down
-     plot, tot_days, H, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
+     PLOT, tot_days, H, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
-     POSITION=[0.1,0.1,0.95,0.53], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), yrange=[down,up], THICK=4, /NOERASE
+     POSITION=[0.1,0.55,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], YSTYLE = 6,$
+     XTICKNAME=REPLICATE(' ', tw+1), YRANGE=[down,up], THICK=4
 
 ;###############################################################################         
      dH = TeXtoIDL('\DeltaH') 
      dst_l = TexToIDL('Dst(\lambda)')
                 
-     new_index = p_a+ddyn+dp2
+     new_index = baseline+ddyn+dp2
+
      OPLOT, tot_days, new_index, COLOR=naranja, THICK=4       
-     OPLOT, tot_days, p_a, COLOR=azul, THICK=4      
+     OPLOT, tot_days, dst, COLOR=azul, THICK=4      
 ;###############################################################################                         
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
@@ -634,7 +732,7 @@ endcase
                          TICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[down,up], $
-                         YTITLE = dH+'-'+dst_l+' [nT]', $                          
+                         YTITLE = '[nT]', $                          
                          COLOR=negro, $
                          CHARTHICK=1,$
                          YSTYLE=2, $
@@ -645,7 +743,54 @@ endcase
                          COLOR=negro, $
                          CHARTHICK=1,$                         
                          YSTYLE=2, $
-                         CHARSIZE = 0.9;, $                                         
+                         CHARSIZE = 0.9;, $                                        
+;###############################################################################                       
+;###############################################################################                          
+;###############################################################################
+    IF MAX(ap) GT MAX(a_mex) THEN up_a = MAX(ap) ELSE up_a = MAX(a_mex)
+    IF MIN(ap) LT MIN(a_mex) THEN down_a = MIN(ap) ELSE down_a = MIN(a_mex) 
+    
+     PLOT, k_days, a_mex, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
+     COLOR=negro, CHARSIZE = 0.9, CHARTHICK=chr_thick1, $
+     POSITION=[0.1,0.1,0.95,0.45], XSTYLE = 5, XRANGE=[0, tw], ySTYLE = 6,$
+     XTICKNAME=REPLICATE(' ', tw+1), YRANGE=[down_a,up_a], THICK=4, /NOERASE
+     
+     OPLOT, k_days, ap, COLOR=verde, LINESTYLE=0, THICK=4
+;###############################################################################             
+;###############################################################################                         
+        AXIS, XAXIS = 0, XRANGE=[0,tw], $
+                         XTICKS=tw, $
+                         XTITLE=time_title, $                         
+                         XMINOR=8, $
+                         XTICKNAME=X_label, $
+                         COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         TICKLEN=0.04
+                         
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
+                         XTICKS=tw, $
+                         XTICKV=FIX(days), $       
+                         XTICKN=STRING(days, FORMAT='(I02)'), $                                            
+                         XMINOR=8, $ 
+                         CHARSIZE = 0.8, $                       
+                         COLOR=negro, $
+                         TICKLEN=0.04
+
+        AXIS, YAXIS = 0, YRANGE=[down_a,up_a], $
+                         YTITLE = '[nT]', $                          
+                         COLOR=negro, $
+                         CHARTHICK=1,$
+                         YSTYLE=2, $
+                         CHARSIZE = 0.9;, $
+                        
+        AXIS, YAXIS = 1, YRANGE=[down_a,up_a], $
+                       ;  YTITLE = 'TEC-<TEC> [TECu]', $          
+                         COLOR=negro, $
+                         CHARTHICK=1,$                         
+                         YSTYLE=2, $
+                         CHARSIZE = 0.9;, $  
+;###############################################################################                       
+;###############################################################################                          
 ;###############################################################################
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    y = 0.95   
@@ -657,51 +802,51 @@ endcase
    color=negro, Alignment=0.5, Charsize=0.9  
 
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.55, 'Tiempo Local', /Normal, $
+   XYOuts, X, 0.469, 'Tiempo Local', /Normal, $
    color=negro, Alignment=0.5, Charsize=0.9  
    
 
-   XYOuts, 0.93, 0.65, '(a)', /Normal, $
+   XYOuts, 0.93, 0.57, '(a)', /Normal, $
    color=negro, Alignment=0.5, Charsize=1.4, CHARTHICK= 3    
    
    
-   XYOuts, 0.93, 0.24, '(b)', /Normal, $
+   XYOuts, 0.93, 0.42, '(b)', /Normal, $
    color=negro, Alignment=0.5, Charsize=1.4, CHARTHICK= 3          
 ;###############################################################################                     
-;first panel legend
-        POLYFILL, [0.83,0.86,0.86,0.83], [0.705,0.705,0.707,0.707], color = negro, /NORMAL
-        POLYFILL, [0.83,0.86,0.86,0.83], [0.735,0.735,0.737,0.737], color = rojo, /NORMAL        
-
-        XYOUTS, 0.87, 0.7 , /NORMAL, $
-                'Diono-Ddyn', COLOR=negro, $
-                CHARSIZE = 1.2, $
-                CHARTHICK=chr_thick1 
-
-        XYOUTS, 0.87, 0.73 , /NORMAL, $
-                'Dp2', COLOR=negro, $
-                CHARSIZE = 1.2, $
-                CHARTHICK=chr_thick1      
-                
-;first panel legend
-        POLYFILL, [0.83,0.86,0.86,0.83], [0.232,0.232,0.235,0.235], color = negro, /NORMAL
-        POLYFILL, [0.83,0.86,0.86,0.83], [0.203,0.203,0.206,0.206], color = naranja, /NORMAL        
-        POLYFILL, [0.83,0.86,0.86,0.83], [0.173,0.173,0.176,0.176], color = azul, /NORMAL   
+;first panel legend                   
+        POLYFILL, [0.79,0.82,0.82,0.79], [0.654,0.654,0.657,0.657], color = negro, /NORMAL
+        POLYFILL, [0.79,0.82,0.82,0.79], [0.624,0.624,0.627,0.627], color = naranja, /NORMAL        
+        POLYFILL, [0.79,0.82,0.82,0.79], [0.594,0.594,0.597,0.597], color = azul, /NORMAL   
         
-        XYOUTS, 0.87, 0.23 , /NORMAL, $
+        XYOUTS, 0.825, 0.65 , /NORMAL, $
                 dH, COLOR=negro, $
                 CHARSIZE = 1.2, $
                 CHARTHICK=chr_thick1 
                 
-     D = TexToIDL('D_{Ddyn+Dp2}')
-        XYOUTS, 0.87, 0.2 , /NORMAL, $
-               dst_l+'+'+D, COLOR=negro, $
+     D1 = TexToIDL('Ddyn+Dp2')
+        XYOUTS, 0.825, 0.62 , /NORMAL, $
+               dst_l+'+'+D1, COLOR=negro, $
                 CHARSIZE = 1.2, $
                 CHARTHICK=chr_thick1   
                 
-        XYOUTS, 0.87, 0.17 , /NORMAL, $
-                dst_l, COLOR=negro, $
+        XYOUTS, 0.825, 0.59 , /NORMAL, $
+                'Dst', COLOR=negro, $
                 CHARSIZE = 1.2, $
-                CHARTHICK=chr_thick1                                                            
+                CHARTHICK=chr_thick1     
+                
+;second panel legend  
+        POLYFILL, [0.79,0.82,0.82,0.79], [0.424,0.424,0.427,0.427], color = negro, /NORMAL
+        POLYFILL, [0.79,0.82,0.82,0.79], [0.394,0.394,0.397,0.397], color = verde, /NORMAL  
+
+                XYOUTS, 0.825, 0.42 , /NORMAL, $
+                'Ap', COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1   
+                
+        XYOUTS, 0.825, 0.39 , /NORMAL, $
+                'Amex', COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1   
 ;###############################################################################
 ; saving png
 ;###############################################################################     
@@ -720,14 +865,14 @@ endcase
                 true_image[0,*,*] = R_bak[image]
                 true_image[1,*,*] = G_bak[image]
                 true_image[2,*,*] = B_bak[image]
-                write_jpeg, path+'diono_final'+Date+'.jpg', True_Image, true=1
+                write_jpeg, path+'diono_final_V2_'+Date+'.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'diono_final'+Date+'.png', Image, R_bak, G_bak, B_bak
+                WRITE_PNG, path+'diono_final_V2_'+Date+'.png', Image, R_bak, G_bak, B_bak
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'diono_final'+Date+'.png'
+                print, '        Saving: '+path+'diono_final_V2_'+Date+'.png'
                 print, ''
         ENDIF
         RETURN 	
