@@ -92,9 +92,7 @@ function dst_data, initial
 		readf, lun, data, FORMAT = '(A)'
 		CLOSE, lun
 		FREE_LUN, lun
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+
         DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, $
         DOY : 0, Dst: 0}
 
@@ -197,21 +195,86 @@ FORMAT='(I4,I4,I3,I5,I3,I3,I4,I4,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,'+$
 end
 
 
-function baseline_sq, date
+function kmex, date
 	On_error, 2
 	compile_opt idl2, HIDDEN
-	
-	yr	= date[0]
-	mh	= date[1]
 
-        date = string(yr, mh, format = '(I4, "-", I02)')
-        header=0
-
-		file_name = '../rutidl/output/Bsq_baselines/'+'Bsq_'+date+'.txt'
-	
+	year	= date[0]
+	month	= date[1]
+	day 	= date[2]	
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;reading data files
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+        date = string(year, month, day, format = '(I4, I02, I02)')		
+		name = 'teo_'+date+'.index.'
+		
+		file_name = '../rutidl/Kmex/'+name+'final'		
+		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
-		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
+	    IF opened_files NE N_ELEMENTS(file) THEN begin
+	        file_name = '../rutidl/Kmex/'+name+'early'
+	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
+    	    IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  
+	    
+	    endif
 
+		number_of_lines = FILE_LINES(file)
+	   ; print, number_of_lines
+		data = STRARR(number_of_lines)
+
+		openr, lun, file, /GET_LUN, ERROR=err
+		IF err NE 0 THEN MESSAGE, 'Error opening '+file_name[0]
+		readf, lun, data, FORMAT = '(A)'
+		CLOSE, lun
+		FREE_LUN, lun
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;extracting data and denfining an structure data
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-        
+        idx_kmex      = {k_mex      : intarr(8), $
+                         k_mex_sum  : 0, $
+                         a_mex      : intarr(8), $
+                         a_med      : 0}
+        
+        struct = {x : [0, 0, 0, 0, 0, 0, 0, 0], y : 0}
+        
+        tmp_var = replicate(struct, 2)
+
+	;	idx_kmex = REPLICATE(DStruct, number_of_lines-header)	
+  
+		READS, data, tmp_var, FORMAT='(I3, I4, I4, I4, I4, I4, I4, I4, I4)'
+		
+		idx_kmex.k_mex[*]   = tmp_var[0].x
+		idx_kmex.a_mex[*]   = tmp_var[1].x
+        idx_kmex.k_mex_sum  = tmp_var[0].y
+        idx_kmex.a_med      = tmp_var[1].y		
+		
+		return, idx_kmex	
+end
+
+function kp_data, in
+
+	On_error, 2
+	compile_opt idl2, HIDDEN
+
+        header = 36             ; Defining number of lines of the header 
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;reading data files
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+        year = string(in, format = '(I4)')
+		file_name = '../rutidl/kp/Kp_'+ year+'-01-01_'+year+'-12-31_D.dat'
+		
+		file = FILE_SEARCH(file_name, COUNT=opened_files)
+
+	    IF opened_files NE N_ELEMENTS(file) THEN begin
+	        file_name = '../rutidl/kp/Kp_'+ year+'-01-01_'+year+'-12-31_P.dat'
+	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
+    	    IF opened_files NE N_ELEMENTS(file) THEN begin
+    	        file_name = '../rutidl/kp/Kp_'+ year+'-01-01_'+year+'-12-31_Q.dat'
+	            file = FILE_SEARCH(file_name, COUNT=opened_files)    	        
+    	        IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  
+    	    ENDIF    	    	    
+	    ENDIF     
+        
 		number_of_lines = FILE_LINES(file)
 		data = STRARR(number_of_lines)
 
@@ -219,14 +282,45 @@ function baseline_sq, date
 		readf, lun, data, FORMAT = '(A)'
 		CLOSE, lun
 		FREE_LUN, lun
-		
-        DStruct = {year : 0, month : 0, day : 0, hour : 0, doy : 0, Bsq : 0.}                                   
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;extracting data and denfining an structure data
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 
-		B_sq = REPLICATE(DStruct, number_of_lines-header)	
-		READS, data[header:number_of_lines-1], B_sq, $
-	 format='(I4,X, I02,X, I02, 2X, I02, 2X, I03, 2X, F08.4)' 		
-		return, B_sq
-end
+        DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, $
+                      DOY : 0, Kp: 0, Kp_str: '', Ap: 0}
+
+		resulting_data0 = REPLICATE(DataStruct, number_of_lines-header)	
+        ;print, number_of_lines-header-1, number_of_lines-header+1
+        
+        
+		READS, data[header:number_of_lines-1], resulting_data0, $
+		FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,8X,I3,X,I1,A1,X,I3)'
+		
+		indexes_07 = WHERE(resulting_data0[*].Kp_str EQ '-')
+		indexes_03 = WHERE(resulting_data0[*].Kp_str EQ '+')
+		indexes_00 = WHERE(resulting_data0[*].Kp_str EQ 'o')
+		
+		Kp_tmp = resulting_data0[*].Kp*10
+		
+		Kp_tmp[indexes_07] = Kp_tmp[indexes_07]-3
+		Kp_tmp[indexes_03] = Kp_tmp[indexes_03]+3
+
+
+                DataStruct2 = {year : 0, month : 0, day : 0, hour : 0, minute: 0, $
+                      DOY : 0, Kp: 0, Ap: 0}
+
+		resulting_data = REPLICATE(DataStruct2, number_of_lines-header)	
+
+		resulting_data[*].year   = resulting_data0[*].year
+		resulting_data[*].month  = resulting_data0[*].month
+		resulting_data[*].day    = resulting_data0[*].day
+		resulting_data[*].hour   = resulting_data0[*].hour
+		resulting_data[*].minute = resulting_data0[*].minute
+		resulting_data[*].DOY    = resulting_data0[*].DOY
+		resulting_data[*].Kp     = Kp_tmp[*]
+		resulting_data[*].Ap     = resulting_data0[*].AP				
+		return, resulting_data
+end  
 
 
 function Date2DOY, idate
@@ -296,8 +390,7 @@ function Date2DOY, idate
 	END
 
 
-pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
-
+pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
@@ -317,7 +410,10 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
     d_dst = dst_data(yr_i)
     t = n_elements(d_dst.year)    
     i_dst = d_dst.Dst
-   
+;###############################################################################   
+    d_kp = kp_data(yr_i)     
+    i_kp = d_kp.Kp       
+;###############################################################################    
     year = d_dst.year
     tiempo = TIMEGEN(t, START=julday(d_dst.month[0], d_dst.day[0],  $
                      d_dst.year[0], d_dst.hour[0]), UNITS='Hours')  
@@ -334,16 +430,21 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
     
     dst     = i_dst[(idoy*24)-24:fdoy*24-1]    
     Date    = string(year[0], mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
+    
+    kp      =  i_kp[(idoy*8)-8:fdoy*8-1]     
+    kp      = kp/10.0
 ;###############################################################################
 ; define DH variables
 ;###############################################################################
        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
                
         data_file_name_dh  = strarr(file_number)        
-        string_date_dh        = strarr(file_number)
-
-        data_file_name_tec  = strarr(file_number)        
-        string_date_tec        = strarr(file_number)        
+        string_date        = strarr(file_number)
+        
+        data_file_name_km  = strarr(file_number)
+        
+        string_date_tec    = strarr(file_number)
+        data_file_name_tec  = strarr(file_number)              
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -351,46 +452,60 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
                 tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
-                string_date_dh[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
+                string_date[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
                 string_date_tec[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4, "-", I02, "-", I02)')
-        
-                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date_dh[i]+'.dst.early'
+                
+                data_file_name_km[i] = '../rutidl/Kmex/'+'teo_'+string_date[i]+'.index.final'                      
+                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'
                 data_file_name_tec[i] = '../rutidl/tec/'+'tec_'+string_date_tec[i]+'.txt'
-		        file_dh = FILE_SEARCH(data_file_name_dh[i], COUNT=opened_files)
-		        file_tec = FILE_SEARCH(data_file_name_tec[i], COUNT=opened_files)
-		        
-	            IF opened_files NE N_ELEMENTS(file_dh) THEN begin
-	                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date_dh[i]+'.dst.early'    
-	            ENDIF
+		       
+		        file = FILE_SEARCH(data_file_name_km[i], COUNT=opened_files)
+	            IF opened_files NE N_ELEMENTS(file) THEN begin
+	                data_file_name_km[i] = '../rutidl/Kmex/'+'teo_'+string_date[i]+'.index.early'    
+	            ENDIF 	
 	            
-	            IF opened_files NE N_ELEMENTS(file_tec) THEN begin
-	                data_file_name_tec[i] = '../rutidl/tec/'+'tec_'+string_date_tec[i]+'.txt'
-	            ENDIF 	                            
+		        file_dh = FILE_SEARCH(data_file_name_dh[i], COUNT=opened_files)
+		        file_tec = FILE_SEARCH(data_file_name_tec[i], COUNT=opened_files)		        
+	            IF opened_files NE N_ELEMENTS(file_dh) THEN begin
+	                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'    
+	            ENDIF
+        	                            
         ENDFOR
+
 
         exist_data_file_dh   = FILE_TEST(data_file_name_dh)
         capable_to_plot_dh   = N_ELEMENTS(where(exist_data_file_dh EQ 1))
 
-        exist_data_file_tec   = FILE_TEST(data_file_name_tec)
-        capable_to_plot_tec   = N_ELEMENTS(where(exist_data_file_tec EQ 1))
+        exist_data_file_km   = FILE_TEST(data_file_name_km)
+        capable_to_plot_km   = N_ELEMENTS(where(exist_data_file_km EQ 1))
+
         
         IF capable_to_plot_dh NE N_ELEMENTS(data_file_name_dh) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
                 PRINT, FORMAT="('                missing GMS_YYYYMMDD.dh_index.',A,' impossible to plot all data.')"              
         ENDIF
-
+        
+        exist_data_file_tec   = FILE_TEST(data_file_name_tec)
+        capable_to_plot_tec   = N_ELEMENTS(where(exist_data_file_tec EQ 1))
         IF capable_to_plot_tec NE N_ELEMENTS(data_file_name_tec) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
                 PRINT, FORMAT="('                missing GMS_YYYYMMDD.tec_index.',A,' impossible to plot all data.')"              
         ENDIF
-                        
+
+        exist_data_file_km   = FILE_TEST(data_file_name_km)
+        capable_to_plot_km   = N_ELEMENTS(where(exist_data_file_km EQ 1))
+        IF capable_to_plot_km NE N_ELEMENTS(data_file_name_km) THEN BEGIN 
+                PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.km_index.',A,' impossible to plot all data.')"              
+        ENDIF
+                                
         H    = FLTARR(file_number*24)                       
         FOR i = 0, N_ELEMENTS(exist_data_file_dh)-1 DO BEGIN
                 IF exist_data_file_dh[i] EQ 1 THEN BEGIN
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
-                        READS, string_date_dh[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
+                        READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
                         d_dh = DH_teo([tmp_year, tmp_month, tmp_day])
                         
                         H[i*24:(i+1)*24-1] = d_dh.H[*]
@@ -418,6 +533,22 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
                         med[i*12:(i+1)*12-1] = 999.0
                 ENDELSE                
         ENDFOR
+
+        k_mex    = fltarr(file_number*8)
+        a_mex    = INTARR(file_number*8)
+        FOR i = 0, N_ELEMENTS(exist_data_file_km)-1 DO BEGIN
+                IF exist_data_file_km[i] EQ 1 THEN BEGIN
+                        tmp_year    = 0
+                        tmp_month   = 0
+                        tmp_day     = 0
+                        READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'                 
+                        d_km = kmex([tmp_year, tmp_month, tmp_day])
+                        
+                        k_mex[i*8:(i+1)*8-1] = d_km.k_mex[*]/10.
+                        a_mex[i*8:(i+1)*8-1] = d_km.a_mex[*]
+                ENDIF             
+        ENDFOR
+    k_days = findgen(tw*8)/8.0 
 
         for i=0, n_elements(tec)-1 do begin
             if tec[i] eq 999.0 then begin
@@ -459,65 +590,7 @@ pro diono, r_dst, r_ip, B_sq, DOY, date_i, date_f
 ;###############################################################################                               
 ;############################################################################### 
     tec_days= findgen(tw*12)/12.0  
-    tec_diff = tec-med
-    
-    new_tecdays = findgen(tw*1440)/1440.0 ;se genera un arreglo de tiempo con 
-;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
-    
-    new_tecdiff = FLTARR(N_ELEMENTS(new_tecdays))     	
-    
-;    print, N_ELEMENTS(new_tecdays), N_ELEMENTS(new_tecdiff)
-    tmp_tecdif  = INTERPOL(tec_diff, N_ELEMENTS(new_tecdays))
-    new_tecdiff = tmp_tecdif
-;############################################################################### 
-    i_diff = dst-H
-    
-    new_dstdays = findgen(tw*1440)/1440.0 ;se genera un arreglo de tiempo con 
-;    muestreo cada 15 min. para mejorar la resolución de las gráficas    
-    
-    new_idiff = FLTARR(N_ELEMENTS(new_dstdays))     	
-    
-;    print, N_ELEMENTS(new_tecdays), N_ELEMENTS(new_tecdiff)
-    tmp_idiff  = INTERPOL(i_diff, N_ELEMENTS(new_dstdays))
-    new_idiff = tmp_idiff           
-;###############################################################################
-; define diurnal baseline
-;###############################################################################  
-    sqline = baseline_sq([yr_i, mh_i])
-    
-    sq_doy  = sqline.doy
-    Bsq_ln   = sqline.Bsq
-
-
-    tmp_doy = dst_doy[(idoy*24)-24:fdoy*24-1]
-    Bsq     = fltarr(n_elements(Bsq_ln))
-    
-    tmp_doy = tmp_doy[uniq(tmp_doy, sort(tmp_doy))]
-   ; print, tmp_doy
-    
-   ; tmp_doy2= intarr(n)
-    for i=0, n_elements(tmp_doy)-1 do begin
-        ;print, tmp_doy[i]
-            for j=0, n_elements(sq_doy)-1 do begin
-           ; print, ip_doy[j]
-                if tmp_doy[i] eq sq_doy[j] then begin
-               ; ip_doy[j]   = tmp_doy[i]   
-               Bsq[j]    = Bsq_ln[j]                            
-                endif 
-            endfor
-    endfor
-b_sq = where(Bsq eq 0, zcount, complement=val, ncomplement=valcount)
-
-Bsq      = Bsq[val]
-;###############################################################################
-; define time window
-;###############################################################################  
-
-   mlat         = 28.06*!pi
-   ld           = cos(mlat/180)
-   p_a          = dst*ld
-   baseline     = Bsq + p_a             
-        diono  = H-baseline         
+    tec_diff = tec-med    
 ;###############################################################################
 ; define ip parameters
 ;###############################################################################  
@@ -528,47 +601,28 @@ Bsq      = Bsq[val]
     ip_hour = ip.hour
     ip_Ey   = ip.E
     ip_flow = ip.flow_p
-    ip_AU   = ip.AU
-    ip_AL   = ip.AL
-    ip_AE   = ip.AE
 
     tmp_doy = dst_doy[(idoy*24)-24:fdoy*24-1]
    
     Ey      = fltarr(n_elements(ip_doy))
     p_dyn   = fltarr(n_elements(ip_doy))
-    AE      = fltarr(n_elements(ip_doy))
-    AL      = fltarr(n_elements(ip_doy))
-    AU      = fltarr(n_elements(ip_doy))
         
     tmp_doy = tmp_doy[uniq(tmp_doy, sort(tmp_doy))]
-    
-    ;tmp_doy2= intarr(n)
+
     for i=0, n_elements(tmp_doy)-1 do begin
-        ;print, tmp_doy[i]
             for j=0, n_elements(ip_doy)-1 do begin
-           ; print, ip_doy[j]
                 if tmp_doy[i] eq ip_doy[j] then begin
-               ; ip_doy[j]   = tmp_doy[i]   
                p_dyn[j]    = ip_flow[j]
-               Ey[j]       = ip_Ey[j]
-               AE[j]       = ip_AE[j]
-               AL[j]       = ip_AL[j]
-               AU[j]       = ip_AU[j]                              
+               Ey[j]       = ip_Ey[j]                            
                 endif 
             endfor
     endfor
     
 e_z = where(Ey eq 0, zcount, complement=val, ncomplement=valcount)
 p_z = where(p_dyn eq 0, zcount2, complement=val_p, ncomplement=valcount_p)
-aez = where(AE eq 0, zcount3, complement=val_AE, ncomplement=valcount)
-alz = where(AL eq 0, zcount4, complement=val_AL, ncomplement=valcount)
-auz = where(AU eq 0, zcount5, complement=val_AU, ncomplement=valcount)
 
 Ey      = Ey[val]
 p_dyn   = p_dyn[val]
-AE      = AE[val_AE]
-AL      = AL[val_AL]
-AU      = AU[val_AU]
 
         for i=0, n_elements(Ey)-1 do begin
             if Ey[i] eq 999.990 then begin
@@ -580,8 +634,7 @@ AU      = AU[val_AU]
             if p_dyn[i] eq 99.99 then begin
                 p_dyn[where(p_dyn[*] eq 99.99)] = !Values.F_NAN          
             endif
-        endfor  
- 
+        endfor   
 ;###############################################################################
 ; define device and color parameters 
 ;###############################################################################      
@@ -596,13 +649,13 @@ AU      = AU[val_AU]
         DEVICE, z_buffering=0     
         DEVICE, set_character_size = [10, 12]
       ;  DEVICE, IDL_GR_X_RETAIN=0
-        DEVICE, DECOMPOSED=0     
+        DEVICE, DECOMPOSED=1     
         chr_size1 = 0.9
         chr_thick1= 1.0
         space     = 0.015
         rojo      = 248
         amarillo  = 220
-        verde     = 180
+        verde     = 150
         negro     = 0
         azul      = 70
         blanco    = 255
@@ -671,8 +724,6 @@ endcase
        days = days*24/24. 
        day_time = findgen(24)
 ;###############################################################################            
-    plot_title = 'Perturbacion Ionosferica asociada a la '   
-
     if max(dst) gt max(H) then up = max(dst) else up = max(H)
     if min(dst) lt min(H) then down = min(dst) else down = min(H)
     
@@ -690,269 +741,239 @@ endcase
     plot, tot_days, Ey, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
      CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.1,0.76,0.9,0.93], $
      XSTYLE = 5, XRANGE=[0, tw],  XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
-     YRANGE=[down_E,up_E]  
+     YRANGE=[down_E,up_E], THICK=4  
 
    	
-
     plot, tot_days, p_dyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=azul,$
      CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.1,0.76,0.9,0.93], $
      XSTYLE = 5, XRANGE=[0, tw], YRANGE=[down_p,up_p], XTICKNAME=REPLICATE(' ', tw+1), $
-     ySTYLE = 6, /noerase;, SUBTITLE = time_title 
+     ySTYLE = 6, /noerase, THICK=4 ;, SUBTITLE = time_title 
 
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
                          XTICKS=tw, $
-                         XTITLE='Tiempo Universal (dias)', $                           
+                         XTITLE='Tiempo Universal [dias de '+old_month+']', $                           
                          XMINOR=8, $
-                         ;XTICKFORMAT='(A1)',$
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 0.8, $
-;                         CHARTHICK=chr_thick1, $
+                         CHARSIZE = 0.9, $
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $      
                          XTICKS=tw, $
                          XMINOR=8, $
-                         XTICKV=days,$
-                         XTICKN=fix(days),$
+                         XTICKV=FIX(days), $       
+                         XTICKN=STRING(days, FORMAT='(I02)'), $  
                          COLOR=negro, $
-                         CHARSIZE = 0.8, $
-                        ; xtitle=time_title,$
+                         CHARSIZE = 0.9, $
                          TICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[down_E, up_E], $
                          ystyle=2, $  
-                         YTITLE = 'E [mV/m]', $                          
+                         YTITLE = 'Ey [mV/m]', $                          
                          COLOR=negro, $
                          CHARSIZE = 0.9;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        ;YRANGE=[down,up]
                         
         AXIS, YAXIS = 1, YRANGE=[down_p,up_p], $
                          ystyle=2, $  
                          YTITLE = 'P [nPa]', $                          
                          COLOR=azul, $
-                         CHARSIZE = 0.9;, $
-                        ; CHARTHICK=chr_thick1;, $    
-;                         YRANGE=[down0,up0]  
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=2;, $    
 
-        
+    up      = MAX(H+10)
+    down    = MIN(H-10)    
     plot, tot_days, H, XTICKS=tw, xminor = 8, POSITION=[0.1,0.52,0.9,0.69],$
-    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, YRANGE=[down, up],$
+    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=5, YRANGE=[down, up],$
     title = '', BACKGROUND = blanco, COLOR=negro, XRANGE=[0, tw],$
-	ytitle = 'Indice DST [nT]',  XTICKNAME=REPLICATE(' ', tw+1), /noerase
+	ytitle = '',  XTICKNAME=REPLICATE(' ', tw+1), /noerase, THICK=4
 
-    oplot, tot_days, dst, COLOR=morado, linestyle=0
-    ;oplot, tot_days, sym_H, COLOR=azul, linestyle=0    
-
+    oplot, tot_days, dst, COLOR=verde, linestyle=0, THICK=4   
+     dH = TeXtoIDL('\DeltaH') 
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTITLE='Tiempo Universal (dias)', $  
+                         XTITLE='Tiempo Universal [dias de '+old_month+']', $  
                          XTICKS=tw, $
                          XMINOR=8, $
-                       ;  XTICKFORMAT='(A1)',$
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 0.8, $
-;                         CHARTHICK=chr_thick1, $
+                         CHARSIZE = 0.9, $
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $      
                          XTICKS=tw, $
                          XMINOR=8, $
-                         XTICKV=days,$
-                         XTICKN=fix(days),$
-                         CHARSIZE = 0.8, $                         
+                         XTICKV=FIX(days), $       
+                         XTICKN=STRING(days, FORMAT='(I02)'), $  
+                         CHARSIZE = 0.9, $                         
                          COLOR=negro, $
                          TICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[down,up], $
-                         YTITLE = 'DH [nT]', $
-                         ystyle=2, $                          
+                         YTITLE = dH+' y Dst [nT]', $
+                         ystyle=1, $                          
                          COLOR=negro, $
                          CHARSIZE = 0.9;, $
                         
-        AXIS, YAXIS = 1, YRANGE=[down,up], $
-                         YTITLE = 'Dst [nT]', $        
-                         COLOR=morado, $
-                         ystyle=2, $
-                         CHARSIZE = 0.9;, $
+        AXIS, YAXIS = 1, YRANGE=[down,up], $       
+                         COLOR=negro, $
+                         ystyle=1, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1;, $
 
-up_ae       = max(AE)
-down_ae     = min(AE)
-
-    plot, tot_days, AE, XTICKS=tw, xminor = 8, POSITION=[0.1,0.28,0.9,0.45],$
-    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, YRANGE=[down_ae, up_ae],$
+   ; IF MAX(ap) GT MAX(a_mex) THEN up_a = MAX(ap) ELSE up_a = MAX(a_mex)
+  ;  IF MIN(ap) LT MIN(a_mex) THEN down_a = MIN(ap) ELSE down_a = MIN(a_mex) 
+    
+    plot, k_days, k_mex, XTICKS=tw, xminor = 8, POSITION=[0.1,0.28,0.9,0.45],$
+    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=5, YRANGE=[0,9],$
     BACKGROUND = blanco, COLOR=negro, XRANGE=[0, tw],$
-	ytitle = '',  XTICKNAME=REPLICATE(' ', tw+1), /noerase
+	ytitle = '',  XTICKNAME=REPLICATE(' ', tw+1), /noerase, THICK=4
+   ; print, ap
+     OPLOT, k_days, kp, COLOR=verde, LINESTYLE=0, THICK=4
 
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTITLE='Tiempo Universal (dias)', $  
                          XTICKS=tw, $
+                         XTITLE=time_title, $                         
                          XMINOR=8, $
-                        ; XTICKFORMAT='(A1)',$
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 0.8, $
-;                         CHARTHICK=chr_thick1, $
+                         CHARSIZE = 0.9 , $
                          TICKLEN=0.04
                          
-        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $     
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
-                         XMINOR=8, $
-                         XTICKV=days,$
-                         XTICKN=fix(days),$
+                         XTICKV=FIX(days), $       
+                         XTICKN=STRING(days, FORMAT='(I02)'), $                                            
+                         XMINOR=8, $ 
+                         CHARSIZE = 0.9 , $                       
                          COLOR=negro, $
-                         CHARSIZE = 0.8, $
                          TICKLEN=0.04
 
-        AXIS, YAXIS = 0, YRANGE=[down_ae,up_ae], $
-                         YTITLE = 'AE [nT]', $
-                         ystyle=2, $                          
+        AXIS, YAXIS = 0, YRANGE=[0,9], $
+                         YTITLE = '', $                          
                          COLOR=negro, $
-                         CHARSIZE = 0.9;, $
-
+                         CHARTHICK=1,$
+                         YSTYLE=1, $
+                         CHARSIZE = 0.9 ;, $
                         
-        AXIS, YAXIS = 1, YRANGE=[down_ae,up_ae], $
-                         COLOR=negro, $
-                         ystyle=2, $
-                         CHARSIZE = 0.9;, $
+        AXIS, YAXIS = 1, YRANGE=[0,9], $        
+                         COLOR=negro, $                         
+                         YSTYLE=1, $
+                         CHARSIZE = 0.9 ;, $  
 ;###############################################################################
 ;###############################################################################
-    med_idx = MEDIAN(new_idiff)
-    std_idx = stddev(new_idiff, /NAN)
-    
-    i_out = WHERE(new_idiff GE med_idx+std_idx*0.8 OR new_idiff LE med_idx-std_idx*0.8)
-    i_in  = WHERE(new_idiff LE med_idx+std_idx*0.8 AND new_idiff GE med_idx-std_idx*0.8)
-    id_diff_out = new_idiff
-    id_diff_out[i_in]=!Values.F_NAN
-    
-    id_diff_in  = new_idiff
-    id_diff_in[i_out]=!Values.F_NAN
-
-    sup0 = med_idx+std_idx
-    inf0 = med_idx-std_idx
-    
-    lim_sup = fltarr(n_elements(new_idiff))
-    lim_sup[*] = sup0
-
-    lim_inf = fltarr(n_elements(new_idiff))
-    lim_inf[*] = inf0   
-                    
-      
-    up_diono = max(diono)
-    down_diono = min(diono)
-
-    up_tecdiff = max(tec_diff) 
-    down_tecdiff = min(tec_diff)
-          
-    plot, tot_days, diono, XTICKS=tw, xminor = 8, POSITION=[0.1,0.04,0.9,0.21],$
-    XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=6, BACKGROUND = blanco, $
-    COLOR=negro, XRANGE=[0, tw], ytitle = 'Indice DST [nT]',$
-	XTICKNAME=REPLICATE(' ', tw+1), /noerase, YRANGE=[down_diono, up_diono], $
-	/NODATA
-
-        oplot, new_dstdays, id_diff_in, color=negro, linestyle=3
-        oplot, new_dstdays, id_diff_out, color=negro, linestyle=0, thick=4
 ;###############################################################################
-;###############################################################################
-    med_tec = MEDIAN(new_tecdiff)
-    std_tec = stddev(new_tecdiff)
-    
-    index_out = WHERE(new_tecdiff GE med_tec+std_tec OR new_tecdiff LE med_tec-std_tec)
-    index_in  = WHERE(new_tecdiff LE med_tec+std_tec AND new_tecdiff GE med_tec-std_tec)
-    tec_diff_out = new_tecdiff
-    tec_diff_out[index_in]=!Values.F_NAN
-    
-    tec_diff_in  = new_tecdiff
-    tec_diff_in[index_out]=!Values.F_NAN
-;    print, tec_dif
-
-;print, N_ELEMENTS(  index_out  )
-;print, index_out
-    sup = med_tec+std_tec
-    inf = med_tec-std_tec
-    
-    l_sup = fltarr(n_elements(new_tecdiff))
-    l_sup[*] = sup
-
-    l_inf = fltarr(n_elements(new_tecdiff))
-    l_inf[*] = inf
-
-    plot, tec_days, tec_diff, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=rojo,$
+    IF MAX(tec) GT MAX(med) THEN up_tecdiff = MAX(tec) ELSE up_tecdiff = MAX(med)
+    IF MIN(tec) LT MIN(med) THEN down_tecdiff = MIN(tec) ELSE down_tecdiff = MIN(med)
+        
+    plot, tec_days, tec, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.1,0.04,0.9,0.21], $
      XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
-     /noerase, YRANGE=[down_tecdiff, up_tecdiff], /NODATA
+     /noerase, YRANGE=[down_tecdiff, up_tecdiff], THICK=4, COLOR=rojo
 
-        oplot, new_tecdays, tec_diff_in, color=rojo, linestyle=1
-        oplot, new_tecdays, tec_diff_out, color=rojo, linestyle=0, thick=4
-
-       
-    LOADCT, 0, /SILENT
-    oplot, new_tecdays, l_sup, color=rojo, linestyle=1, thick=1
-    oplot, new_tecdays, l_inf, color=rojo, linestyle=1, thick=1
-
-    LOADCT, 39, /SILENT
+        oplot, tec_days, med, color=negro, linestyle=0, THICK=4
     
         AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTITLE='Tiempo Universal (dias)', $
+                         XTITLE='Tiempo Universal [dias de '+old_month+']', $
                          XTICKS=tw, $
                          XMINOR=8, $
-                         ;XTICKFORMAT='(A1)',$
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 0.8, $
-;                         CHARTHICK=chr_thick1, $
+                         CHARSIZE = 0.9, $
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
                          XTICKS=tw, $
                          XMINOR=8, $
-                         XTICKV=days,$
-                         XTICKN=fix(days),$
-                        CHARSIZE = 0.8, $                         
+                         XTICKV=FIX(days), $       
+                         XTICKN=STRING(days, FORMAT='(I02)'), $  
+                        CHARSIZE = 0.9, $                         
                          COLOR=negro, $
                          TICKLEN=0.04
 
-        AXIS, YAXIS = 0, YRANGE=[down_diono, up_diono], $
+        AXIS, YAXIS = 0, YRANGE=[down_tecdiff, up_tecdiff], $
                          ystyle=2, $  
-                         YTITLE = 'Diono (nT)', $                          
+                         YTITLE = 'TEC y <TEC> [TECu]', $                          
                          COLOR=negro, $
                          CHARSIZE = 0.9;, $
-                        ; CHARTHICK=chr_thick1;, $
-                         ;TICKLEN=0.00
-                        ;YRANGE=[down,up]
                         
         AXIS, YAXIS = 1, YRANGE=[down_tecdiff, up_tecdiff], $
-                         ystyle=2, $  
-                         YTITLE = 'TEC-<TEC> (TECu)', $                          
-                         COLOR=rojo, $
-                         CHARSIZE = 0.9;, $
-    
-
+                         ystyle=2, $                    
+                         COLOR=negro, $
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1;, $    
 ;###############################################################################
+;second panel legend                   
+        POLYFILL, [0.77,0.8,0.8,0.77], [0.564,0.564,0.567,0.567], color = negro, /NORMAL
+        POLYFILL, [0.77,0.8,0.8,0.77], [0.534,0.534,0.537,0.537], color = verde, /NORMAL                
+                
+        XYOUTS, 0.81, 0.56 , /NORMAL, $
+                dH, COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1   
+                
+        XYOUTS, 0.81, 0.53 , /NORMAL, $
+                'Dst', COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1     
+
+;third panel legend  
+        POLYFILL, [0.77,0.8,0.8,0.77], [0.424,0.424,0.427,0.427], color = negro, /NORMAL
+        POLYFILL, [0.77,0.8,0.8,0.77], [0.394,0.394,0.397,0.397], color = verde, /NORMAL  
+
+                XYOUTS, 0.81, 0.42 , /NORMAL, $
+                'Kmex', COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1   
+                
+        XYOUTS, 0.81, 0.39 , /NORMAL, $
+                'Kp', COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1  
+                
+;fourth panel legend  
+        POLYFILL, [0.77,0.8,0.8,0.77], [0.184,0.184,0.187,0.187], color = negro, /NORMAL
+        POLYFILL, [0.77,0.8,0.8,0.77], [0.154,0.154,0.157,0.157], color = rojo, /NORMAL  
+
+                XYOUTS, 0.81, 0.18 , /NORMAL, $
+                '<TEC>', COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1   
+                
+        XYOUTS, 0.81, 0.15 , /NORMAL, $
+                'TEC', COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1   
 ;###############################################################################
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    y = 0.97
-   XYOuts, X, y, plot_title+window_title, /Normal, $
-   color=negro, Alignment=0.5, Charsize=1.25
+   XYOuts, X, y, window_title, /Normal, color=negro, Alignment=0.5, Charsize=1.25
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.949, 'Tiempo Local (dias)', /Normal, $
+   XYOuts, X, 0.949, 'Tiempo Local', /Normal, $
    color=negro, Alignment=0.5, Charsize=0.8   
 
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.71, 'Tiempo Local (dias)', /Normal, $
+   XYOuts, X, 0.71, 'Tiempo Local', /Normal, $
    color=negro, Alignment=0.5, Charsize=0.8  
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.468, 'Tiempo Local (dias)', /Normal, $
+   XYOuts, X, 0.468, 'Tiempo Local', /Normal, $
    color=negro, Alignment=0.5, Charsize=0.8  
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.231, 'Tiempo Local (dias)', /Normal, $
+   XYOuts, X, 0.231, 'Tiempo Local', /Normal, $
    color=negro, Alignment=0.5, Charsize=0.8           
 ;###############################################################################
+   XYOuts, 0.14, 0.9, '(a)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.2, CHARTHICK= 3    
+      
+   XYOuts, 0.14, 0.55, '(b)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.2, CHARTHICK= 3 
+   
+   XYOuts, 0.14, 0.42, '(c)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.2, CHARTHICK= 3    
+      
+   XYOuts, 0.14, 0.17, '(d)', /Normal, $
+   color=negro, Alignment=0.5, Charsize=1.2, CHARTHICK= 3    
 ;############################################################################### 
      Image=TVRD() 
     TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!
