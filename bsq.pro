@@ -29,51 +29,7 @@
 ;output files:
 ;
 
-function dst_data, initial
 
-	On_error, 2
-	compile_opt idl2, HIDDEN
-
-	year = string(initial, format = '(I4)')
-	;type_data = string(tp, format = '(A)')
-		file_name = '../rutidl/dst/Dst_'+ year+'-01-01_'+year+'-12-31_D.dat'
-		
-        header = 25             ; Defining number of lines of the header 
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-;reading data files
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-	
-		file = FILE_SEARCH(file_name, COUNT=opened_files)
-		
-	    IF opened_files NE N_ELEMENTS(file) THEN begin
-	        file_name = '../rutidl/dst/Dst_'+ year+'-01-01_'+year+'-12-31_P.dat'
-	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
-    	    IF opened_files NE N_ELEMENTS(file) THEN begin
-    	        file_name = '../rutidl/dst/Dst_'+ year+'-01-01_'+year+'-12-31_Q.dat'
-	            file = FILE_SEARCH(file_name, COUNT=opened_files)    	        
-    	        IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  
-    	    ENDIF    	    	    
-	    ENDIF
-
-		number_of_lines = FILE_LINES(file)
-		data = STRARR(number_of_lines)
-
-		openr, lun, file, /GET_LUN, ERROR=err
-		readf, lun, data, FORMAT = '(A)'
-		CLOSE, lun
-		FREE_LUN, lun
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-        DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, $
-        DOY : 0, Dst: 0}
-
-		r_dst = REPLICATE(DataStruct, number_of_lines-header)	        
-        
-		READS, data[header:number_of_lines-1], r_dst, $
-		FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,8X,I3,X,I6)'
-		
-		return, r_dst
-end
 
 function DH_teo, date
 
@@ -322,15 +278,7 @@ FOR i=0, ndays-1 DO BEGIN
     
     CLOSE, LUN
     FREE_LUN, LUN    
-    endfor
-    
- ;   for i=0, n_elements(Bsq)-1 do begin
- ;       doy[i] = date2doy(string(year[i], mh[i], dy[i],format = '(I02,I02,I02)'))
- ;       printf, lun, yr[i], mh[i], dy[i], hr[i], doy[i], Bsq[i], $
- ;       format='(I4, "-", I02, "-", I02, 2X, I02, 2X, I03, 2X, F08.4)' 
- ;   endfor
-    
-    
+    ENDFOR   
 ;###############################################################################    
 path = '../rutidl/output/eventos_tgm/'
 Date = string(yr_i, mh_i, FORMAT='(I4, "-", I02)')
@@ -339,7 +287,7 @@ Date = string(yr_i, mh_i, FORMAT='(I4, "-", I02)')
         SET_PLOT, 'Z'    
         
         Xsize=FIX(1600)
-        Ysize=600
+        Ysize=300
         ;DEVICE, decompose=0
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
         DEVICE, z_buffering=O
@@ -353,7 +301,7 @@ Date = string(yr_i, mh_i, FORMAT='(I4, "-", I02)')
         space     = 0.015
         rojo      = 248
         amarillo  = 190
-        verde     = 180
+        verde     = 170
         negro     = 0
         azul      = 70
         blanco    = 255
@@ -424,11 +372,11 @@ idate0 = string(yr_i, mh_i, format='(I4,I02)')
 TGM_i = idate0
 case TGM_i of
     '200310' : TGM_i = td[360]
-    '200411' : TGM_i = td[20]
+    '200411' : TGM_i = td[24]
     '200505' : TGM_i = td[240]
     '201503' : TGM_i = td[144]
     '201705' : TGM_i = td[24]
-    '201708' : TGM_i = td[546]
+    '201708' : TGM_i = td[216]
     else: print, 'fuera de rango'
 endcase  
 ;###############################################################################
@@ -441,7 +389,7 @@ case TGM_f of
     '200505' : TGM_f = td[288]
     '201504' : TGM_f = td[216]
     '201706' : TGM_f = td[72]
-    '201709' : TGM_f = td[618]
+    '201709' : TGM_f = td[288]
     else: print, 'fuera de rango'
 endcase                   
 ;###############################################################################
@@ -467,7 +415,7 @@ IF MIN(Bsq) LT MIN(T2) THEN down=MIN(Bsq) ELSE down=MIN(T2)
 ini = td[0]
 fin = td[N_ELEMENTS(td)-1]
 ;###############################################################################                                 
-    PLOT, td, Bsq, position = [0.05, 0.1, 0.95, 0.85], XRANGE=[ini,fin], $
+    PLOT, td, Bsq, position = [0.05, 0.12, 0.95, 0.9], XRANGE=[ini,fin], $
     YRANGE=[down,up], YSTYLE=6, XSTYLE=5, BACKGROUND = blanco, COLOR=negro,$
     XTICKNAME=REPLICATE(' ', ndays+1)
 
@@ -477,12 +425,23 @@ fin = td[N_ELEMENTS(td)-1]
               
     POLYFILL, [td[0], td[23], td[23], td[0]],$
               [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
-              COLOR=verde                   
+              COLOR=verde, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3, SPACING=0.3  
+              
+    POLYFILL, [td[0], td[23], td[23], td[0]],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=-45, LINESTYLE=0, THICK=3, SPACING=0.3                                  
 
     POLYFILL, [td[N_ELEMENTS(td)-1], td[N_ELEMENTS(td)-24], $
                td[N_ELEMENTS(td)-25], td[N_ELEMENTS(td)-1]],$
               [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
-              COLOR=verde 
+              COLOR=verde, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3, SPACING=0.3     
+              
+    POLYFILL, [td[N_ELEMENTS(td)-1], td[N_ELEMENTS(td)-24], $
+               td[N_ELEMENTS(td)-25], td[N_ELEMENTS(td)-1]],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=-45, LINESTYLE=0, THICK=3, SPACING=0.3                 
+    ;OPLOT, [td[23],td[23]], [!Y.CRANGE[0], !Y.CRANGE[1]], COLOR=negro, THICK=3, $
+    ;LINESTYLE=2   
         
     OPLOT, td, T1, COLOR=azul, THICK=2
     OPLOT, td, T2, COLOR=rojo, THICK=2   
@@ -494,15 +453,15 @@ fin = td[N_ELEMENTS(td)-1]
                          XMINOR=8, $
                          XTICKNAME=X_label, $
                          COLOR=negro, $
-                         CHARSIZE = 1.2 , $
+                         CHARSIZE = 1.1 , $
                          TICKLEN=0.04
                          
-        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
-                         XTICKS=ndays, $
-                         XTICKV=FIX(tot_days), $       
-                         XTICKN=X_label, $                                            
+        AXIS, XAXIS = 1, XRANGE=[0,ndays], $
+                         ;XTICKS=ndays, $
+                         ;XTICKV=FIX(tot_days), $       
+                         XTICKFORMAT="(A1)", $                                            
                          XMINOR=8, $ 
-                         CHARSIZE = 1.2 , $                       
+                         CHARSIZE = 1.1 , $                       
                          COLOR=negro, $
                          TICKLEN=0.04
 
@@ -524,40 +483,56 @@ fin = td[N_ELEMENTS(td)-1]
    COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90                           
 ;###############################################################################
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   y = 0.95   
+   y = 0.92   
    XYOUTS, X, y, time_title, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.85 
-;###############################################################################
-   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.9, 'Tiempo Local en dias', /Normal, $
-   color=negro, Alignment=0.5, Charsize=1.3  
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.75 
 ;###############################################################################  
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
-   XYOuts, X, 0.02, 'Tiempo Universal en dias', /Normal, $
-   color=negro, Alignment=0.5, Charsize=1.3  
+   XYOuts, X, 0.01, 'Tiempo Universal en dias', /Normal, $
+   color=negro, Alignment=0.5, Charsize=1  
 ;###############################################################################
+IF idate0 EQ '200310' THEN BEGIN
 ;first panel legend                   
-        POLYFILL, [0.17,0.2,0.2,0.17], [0.804,0.804,0.807,0.807], color = azul, /NORMAL
-        POLYFILL, [0.17,0.2,0.2,0.17], [0.774,0.774,0.777,0.777], color = rojo, /NORMAL        
-        POLYFILL, [0.17,0.2,0.2,0.17], [0.744,0.744,0.747,0.747], color = negro, /NORMAL   
+        POLYFILL, [0.08,0.11,0.11,0.08], [0.862,0.862,0.866,0.866], color = azul, /NORMAL
+        POLYFILL, [0.08,0.11,0.11,0.08], [0.827,0.827,0.830,0.830], color = rojo, /NORMAL        
+        POLYFILL, [0.08,0.11,0.11,0.08], [0.794,0.794,0.797,0.797], color = negro, /NORMAL 
+       
+        POLYFILL, [0.16,0.18,0.18,0.16], [0.832,0.832,0.862,0.862], color = verde, $
+        /NORMAL, /LINE_FILL, ORIENTATION=45, THICK=3, LINESTYLE=0, SPACING=0.3   
+        
+        POLYFILL, [0.16,0.18,0.18,0.16], [0.832,0.832,0.862,0.862], color = verde, $
+        /NORMAL, /LINE_FILL, ORIENTATION=-45, THICK=3, LINESTYLE=0, SPACING=0.3  
+
+        POLYFILL, [0.16,0.18,0.18,0.16], [0.794,0.794,0.824,0.824], color = amarillo, /NORMAL         
         
         T1 = TexToIDL('T_1')
-        XYOUTS, 0.21, 0.8 , /NORMAL, $
+        XYOUTS, 0.12, 0.854 , /NORMAL, $
                 T1, COLOR=negro, $
-                CHARSIZE = 1, $
-                CHARTHICK=3 
+                CHARSIZE = 0.9, $
+                CHARTHICK=2 
                 
         T2 = TexToIDL('T_2')
-        XYOUTS, 0.21, 0.77 , /NORMAL, $
+        XYOUTS, 0.12, 0.822 , /NORMAL, $
                 T2, COLOR=negro, $
-                CHARSIZE = 1, $
-                CHARTHICK=3   
+                CHARSIZE = 0.9, $
+                CHARTHICK=2   
 
         Bsq = TexToIDL('B_{SQ}')                
-        XYOUTS, 0.21, 0.74 , /NORMAL, $
+        XYOUTS, 0.12, 0.785 , /NORMAL, $
                 Bsq, COLOR=negro, $
-                CHARSIZE = 1, $
-                CHARTHICK=3   
+                CHARSIZE = 0.9, $
+                CHARTHICK=2
+                             
+        XYOUTS, 0.19, 0.832 , /NORMAL, $
+                'Dia Quieto', COLOR=negro, $
+                CHARSIZE = 0.9, $
+                CHARTHICK=2
+                
+        XYOUTS, 0.19, 0.795 , /NORMAL, $
+                'TGM', COLOR=negro, $
+                CHARSIZE = 0.9, $
+                CHARTHICK=2                                
+ENDIF                   
 ;###############################################################################                
      Image=TVRD() 
     TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!
@@ -577,14 +552,14 @@ fin = td[N_ELEMENTS(td)-1]
                 true_image[0,*,*] = reds[image]
                 true_image[1,*,*] = greens[image]
                 true_image[2,*,*] = blues[image]
-                write_jpeg, path+'Bsq_'+Date+'_V2.jpg', True_Image, true=1
+                write_jpeg, path+'Bsq_'+Date+'_V3.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'Bsq_'+Date+'_V2.png', Image, reds,greens,blues
+                WRITE_PNG, path+'Bsq_'+Date+'_V3.png', Image, reds,greens,blues
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'Bsq_'+Date+'_V2.png'
+                print, '        Saving: '+path+'Bsq_'+Date+'_V3.png'
                 print, ''
         ENDIF
         RETURN
