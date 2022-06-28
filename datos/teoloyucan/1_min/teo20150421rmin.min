@@ -1,0 +1,32 @@
+ FORMAT                 IAGA-2002x (Extended IAGA2002 Format)                         |
+ Source of Data         Teoloyucan Magnetic Observatory, UNAM                         |
+ Station Name           Teoloyucan                                                    |
+ IAGA CODE              TEO                                                           |
+ Geodetic Latitude      19.746                                                        |
+ Geodetic Longitude     -99.193                                                       |
+ Elevation              2280.0                                                        |
+ Reported               DHZF                                                          |
+ Sensor Orientation     absolute:DIF, variation:DFIF                                  |
+ Digital Sampling       5 seconds                                                     |
+ Data Interval Type     Filtered 1-minute (00:15 - 01:45)                             |
+ Data Type              Reported                                                      |
+ # Element              Geomagnetic field                                             |
+ # Unit                 D(eastward+):minute, H:nT, Z(downward+):nT, F:nT              |
+ # Issued by            Instituto de Geofísica, UNAM, MÉXICO                          |
+ # URL                  http://132.248.6.186/                                         |
+ # Last Modified        Mar 31 2014                                                   |
+DATE       TIME         DOY     TEOD      TEOH      TEOZ      TEOF                    |
+2015-04-21 07:31:00.000 111       292.83  27454.17  29950.32  40628.98
+2015-04-21 10:42:00.000 111       292.71  27456.16  29951.60  40631.27
+2015-04-21 11:42:00.000 111       292.77  27455.99  29951.76  40631.27
+2015-04-21 17:40:00.000 111       292.38  27455.70  29922.04  40609.07
+2015-04-21 18:07:00.000 111       292.43  27456.39  29926.88  40613.11
+2015-04-21 18:15:00.000 111       290.86  27456.11  29927.02  40613.04
+2015-04-21 18:30:00.000 111       292.39  27459.39  29926.10  40614.57
+2015-04-21 18:39:00.000 111       291.39  27458.94  29925.48  40613.80
+2015-04-21 18:40:00.000 111       291.39  27459.69  29924.50  40613.57
+2015-04-21 18:42:00.000 111       291.68  27458.08  29924.20  40612.28
+2015-04-21 22:52:00.000 111       289.54  27446.23  29925.90  40605.56
+2015-04-21 23:08:00.000 111       290.16  27450.49  29929.24  40610.90
+2015-04-21 23:35:00.000 111       290.91  27451.50  29936.25  40616.78
+2015-04-21 23:52:00.000 111       289.66  27446.07  29926.86  40606.17

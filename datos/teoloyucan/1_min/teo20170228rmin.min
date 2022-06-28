@@ -1,0 +1,22 @@
+ FORMAT                 IAGA-2002x (Extended IAGA2002 Format)                         |
+ Source of Data         Teoloyucan Magnetic Observatory, UNAM                         |
+ Station Name           Teoloyucan                                                    |
+ IAGA CODE              TEO                                                           |
+ Geodetic Latitude      19.746                                                        |
+ Geodetic Longitude     -99.193                                                       |
+ Elevation              2280.0                                                        |
+ Reported               DHZF                                                          |
+ Sensor Orientation     absolute:DIF, variation:DFIF                                  |
+ Digital Sampling       5 seconds                                                     |
+ Data Interval Type     Filtered 1-minute (00:15 - 01:45)                             |
+ Data Type              Reported                                                      |
+ # Element              Geomagnetic field                                             |
+ # Unit                 D(eastward+):minute, H:nT, Z(downward+):nT, F:nT              |
+ # Issued by            Instituto de Geofísica, UNAM, MÉXICO                          |
+ # URL                  http://132.248.6.186/                                         |
+ # Last Modified        Mar 31 2014                                                   |
+DATE       TIME         DOY     TEOD      TEOH      TEOZ      TEOF                    |
+2017-02-28 17:52:00.000 059       329.97  27546.19  30150.92  40839.57
+2017-02-28 17:53:00.000 059       334.10  27347.37  30107.13  40673.30
+2017-02-28 17:57:00.000 059       329.88  27543.98  30150.77  40837.96
+2017-02-28 18:27:00.000 059       331.15  27549.55  30150.16  40841.27

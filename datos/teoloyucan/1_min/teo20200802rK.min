@@ -1,0 +1,31 @@
+ FORMAT                 IAGA-2002x (Extended IAGA2002 Format)                         |
+ Source of Data         Teoloyucan Magnetic Observatory, UNAM                         |
+ Station Name           Teoloyucan                                                    |
+ IAGA CODE              TEO                                                           |
+ Geodetic Latitude      19.746                                                        |
+ Geodetic Longitude     -99.193                                                       |
+ Elevation              2280.0                                                        |
+ Reported               DHZF                                                          |
+ Sensor Orientation     absolute:DIF, variation:DFIF                                  |
+ Digital Sampling       5 seconds                                                     |
+ Data Interval Type     Filtered 1-minute (00:15 - 01:45)                             |
+ Data Type              Reported                                                      |
+ # Element              Geomagnetic field                                             |
+ # Unit                 D(eastward+):minute, H:nT, Z(downward+):nT, F:nT              |
+ # Issued by            Instituto de Geofísica, UNAM, MÉXICO                          |
+ # URL                  http://132.248.6.186/                                         |
+ # Last Modified        Mar 31 2014                                                   |
+DATE       TIME         DOY     TEOD      TEOH      TEOZ      TEOF                    |
+2020-08-02 00:01:00.000 215       310.20  27389.18  29874.81  40529.88
+2020-08-02 00:02:00.000 215       310.17  27389.33  29874.58  40529.82
+2020-08-02 00:03:00.000 215       310.17  27389.18  29874.51  40529.66
+2020-08-02 00:04:00.000 215       310.15  27389.18  29874.73  40529.83
+2020-08-02 00:05:00.000 215       310.16  27389.10  29874.51  40529.61
+2020-08-02 00:06:00.000 215       310.14  27389.18  29874.43  40529.60
+2020-08-02 00:07:00.000 215       310.18  27388.95  29874.66  40529.62
+2020-08-02 00:08:00.000 215       310.13  27389.33  29874.51  40529.76
+2020-08-02 00:09:00.000 215       310.14  27389.33  29874.51  40529.76
+2020-08-02 00:10:00.000 215       310.15  27389.26  29874.58  40529.77
+2020-08-02 00:11:00.000 215       310.13  27389.48  29874.43  40529.81
+2020-08-02 00:12:00.000 215       310.19  27389.10  29874.58  40529.66
+2020-08-02 00:13:00.000 215       310.14  27389.41  29874.51  40529.81
