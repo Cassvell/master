@@ -196,25 +196,16 @@ pro teo, date_i, date_f
                 H_STDESV[where(H_STDESV[*] eq 999999.0)] = !Values.F_NAN          
             endif
         endfor
-   ;     for i=0, n_elements(H)-1 do begin
-    ;        if H_STDESV[i] gt 40.0 then begin
-     ;           H_STDESV[where(H_STDESV[*] gt 40.0)] = !Values.F_NAN          
-      ;      endif
-       ; endfor        
-        ;print, H_STDESV
-    time = findgen(file_number *24)/24.0
+    time = FINDGEN(file_number *24)/24.0
 
     path = '../rutidl/output/eventos_tgm/'
 
         Device_bak = !D.Name 
         SET_PLOT, 'Z'
+
         
-        tmp_spam = 1
-        IF file_number GT 7 THEN tmp_spam = 1.5
-        IF file_number GT 15 THEN tmp_spam = 2.
-        
-        Xsize=fix(800*tmp_spam)
-        Ysize=400
+        Xsize=fix(1600)
+        Ysize=250
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
         DEVICE, z_buffering=O
         DEVICE, set_character_size = [10, 12]
@@ -292,7 +283,7 @@ CASE mh_f2 of
     ELSE: PRINT, 'fuera de rango'
 ENDCASE   
 ;###############################################################################
-;fecha del primer dia quieto
+;fecha del primer dia quieto seleccionado
 dy_i2 = dy_i
 idate1 = string(yr_i, mh_i, format='(I4,I02)')
 dq1 = idate1
@@ -302,23 +293,116 @@ case dq1 of
     '200505' : dq1 = 4
     '201503' : dq1 = 2
     '201705' : dq1 = 6
-    '201708' : dq1 = 6
+    '201708' : dq1 = 18
     else: print, 'fuera de rango'
 endcase  
+
+IF idate1 EQ '201705' THEN BEGIN
+        for i=0, n_elements(H)-1 do begin
+            if H_STDESV[i] gt 40.0 then begin
+                H_STDESV[where(H_STDESV[*] gt 40.0)] = !Values.F_NAN          
+            endif
+        endfor        
+ENDIF
 ;###############################################################################
-;fecha del segundo dia quieto
+;fecha del n1 dia quieto 
+dy_i01 = dy_i
+fdate1 = string(yr_i, mh_f, format='(I4,I02)')
+dq01 = idate1
+case dq01 of
+    '200310' : dq01 = 5
+    '200411' : dq01 = 1
+    '200505' : dq01 = 99999
+    '201503' : dq01 = file_number-5    
+    '201705' : dq01 = 5
+    '201708' : dq01 = 5
+    else: print, 'fuera de rango'
+endcase                   
+
+;###############################################################################
+;fecha del n2 dia quieto 
+dy_i02 = dy_i
+fdate1 = string(yr_i, mh_f, format='(I4,I02)')
+dq02 = idate1
+case dq02 of
+    '200310' : dq02 = 6
+    '200411' : dq02 = 99999
+    '200505' : dq02 = 99999
+    '201503' : dq02 = 22
+    '201705' : dq02 = 4
+    '201708' : dq02 = 16
+    else: print, 'fuera de rango'
+endcase    
+;###############################################################################
+;fecha del n3 dia quieto 
+dy_i02 = dy_i
+fdate1 = string(yr_i, mh_f, format='(I4,I02)')
+dq03 = idate1
+case dq03 of
+    '200310' : dq03 = 18
+    '200411' : dq03 = 99999
+    '200505' : dq03 = 99999
+    '201503' : dq03 = file_number-6
+    '201706' : dq03 = 19
+    '201708' : dq03 = 18
+    else: print, 'fuera de rango'
+endcase                 
+;###############################################################################
+;día del segundo día quieto seleccionado
 dy_f2 = dy_f
 fdate1 = string(yr_i, mh_f, format='(I4,I02)')
 dq2 = fdate1
 case dq2 of
     '200311' : dq2 = file_number-4
-    '200411' : dq2 = file_number-6
+    '200411' : dq2 = file_number-7
     '200505' : dq2 = file_number-6
     '201504' : dq2 = file_number-4
     '201706' : dq2 = 15
     '201709' : dq2 = file_number-5
     else: print, 'fuera de rango'
-endcase                   
+endcase 
+;###############################################################################
+;día del segundo día n1
+dy_f2 = dy_f
+fdate1 = string(yr_i, mh_f, format='(I4,I02)')
+dq04 = fdate1
+case dq04 of
+    '200311' : dq04 = file_number-3
+    '200411' : dq04 = file_number-4
+    '200505' : dq04 = file_number-8
+    '201504' : dq04 = 31
+    '201706' : dq04 = 15
+    '201709' : dq04 = file_number-9
+    else: print, 'fuera de rango'
+endcase   
+;###############################################################################
+;día del segundo día n2
+dy_f2 = dy_f
+fdate1 = string(yr_i, mh_f, format='(I4,I02)')
+dq05 = fdate1
+case dq05 of
+    '200311' : dq05 = file_number-2
+    '200411' : dq05 = 99999
+    '200505' : dq05 = file_number-5
+    '201504' : dq05 = 35
+    '201706' : dq05 = file_number-11
+    '201709' : dq05 = file_number-8
+    else: print, 'fuera de rango'
+endcase 
+;###############################################################################
+;día del segundo día n3
+dy_f2 = dy_f
+fdate1 = string(yr_i, mh_f, format='(I4,I02)')
+dq06 = fdate1
+case dq06 of
+    '200311' : dq06 = 99999
+    '200411' : dq06 = 99999
+    '200505' : dq06 = file_number-7
+    '201504' : dq06 = file_number-2
+    '201706' : dq06 = file_number-1
+    '201709' : dq06 = file_number-6
+    else: print, 'fuera de rango'
+endcase  
 ;###############################################################################
 ;fecha en que inició la respectiva TGM 
 idate0 = string(yr_i, mh_i, format='(I4,I02)')
@@ -360,6 +444,22 @@ ENDIF ELSE BEGIN
     STRING(mh_f2, ',', yr_i, FORMAT='((A,A,X,I4))')   
 ENDELSE
 ;###############################################################################
+FOR i=0, file_number-1 DO BEGIN
+    tmp_year    = 0
+    tmp_month   = 0
+    tmp_day     = 0
+    tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
+    CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
+    string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')        
+
+   ; OPENW, LUN, outfile[i], /GET_LUN        
+   PRINT, string_date[i], max(H_STDESV[i*24:(i+1)*24-1]), $
+   FORMAT='(8A, 4X, I03)' 
+    
+   ; CLOSE, LUN
+   ; FREE_LUN, LUN    
+    ENDFOR   
+;###############################################################################
     sigma = TeXtoIDL('\sigmaH')
     dH    = TeXtoIDL('\DeltaH')
     time_title = 'Desviacion estandar de '+dH+' para '+ time_title
@@ -370,8 +470,89 @@ ENDELSE
     plot, time, H_STDESV, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=rojo,$
      CHARSIZE = 1.0, CHARTHICK=chr_thick1, POSITION=[0.05,0.15,0.95,0.90], $
      XSTYLE = 5, XTICKNAME=REPLICATE(' ', file_number+1), XRANGE=[0, file_number], $
-     ySTYLE = 6, YRANGE=[down0,up0], THICK=4   
+     ySTYLE = 6, YRANGE=[down0,up0], THICK=4         
+;###############################################################################    
+    POLYFILL, [dq01, dq01+1, dq01+1, dq01],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3, SPACING=0.3             
 
+    POLYFILL, [dq01, dq01+1, dq01+1, dq01],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=-45, LINESTYLE=0, THICK=3, SPACING=0.3   
+                            
+    POLYFILL, [dq02, dq02+1, dq02+1, dq02],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3, SPACING=0.3   
+
+    POLYFILL, [dq02, dq02+1, dq02+1, dq02],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=-45, LINESTYLE=0, THICK=3, SPACING=0.3  
+              
+    POLYFILL, [dq03, dq03+1, dq03+1, dq03],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3, SPACING=0.3   
+
+    POLYFILL, [dq03, dq03+1, dq03+1, dq03],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=-45, LINESTYLE=0, THICK=3, SPACING=0.3       
+              
+    POLYFILL, [dq04, dq04+1, dq04+1, dq04],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3, SPACING=0.3   
+
+    POLYFILL, [dq04, dq04+1, dq04+1, dq04],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=-45, LINESTYLE=0, THICK=3, SPACING=0.3      
+
+    POLYFILL, [dq05, dq05+1, dq05+1, dq05],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3, SPACING=0.3   
+
+    POLYFILL, [dq05, dq05+1, dq05+1, dq05],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=-45, LINESTYLE=0, THICK=3, SPACING=0.3      
+              
+    POLYFILL, [dq06, dq06+1, dq06+1, dq06],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3, SPACING=0.3   
+
+    POLYFILL, [dq06, dq06+1, dq06+1, dq06],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde, /LINE_FILL, ORIENTATION=-45, LINESTYLE=0, THICK=3, SPACING=0.3                                                                   
+;###############################################################################    
+    ;días quietos seleccionados
+    POLYFILL, [TGM_i, TGM_f, TGM_f, TGM_i], $
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=amarillo
+              
+    POLYFILL, [dq1, dq1+1, dq1+1, dq1],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde;, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3           
+              
+    POLYFILL, [dq2, dq2+1, dq2+1, dq2],$
+              [!Y.CRANGE[0], !Y.CRANGE[0], !Y.CRANGE[1], !Y.CRANGE[1]], $
+              COLOR=verde;, /LINE_FILL, ORIENTATION=45, LINESTYLE=0, THICK=3 
+;###############################################################################           
+;días quietos    
+    OPLOT, [dq01,dq01], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2    
+    OPLOT, [dq01+1,dq01+1], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2  
+
+    OPLOT, [dq02,dq02], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2    
+    OPLOT, [dq02+1,dq02+1], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2 
+    
+    OPLOT, [dq03,dq03], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2    
+    OPLOT, [dq03+1,dq03+1], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2 
+    
+    OPLOT, [dq04,dq04], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2    
+    OPLOT, [dq04+1,dq04+1], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2 
+    
+    OPLOT, [dq05,dq05], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2    
+    OPLOT, [dq05+1,dq05+1], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2         
+ 
+    OPLOT, [dq06,dq06], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2    
+    OPLOT, [dq06+1,dq06+1], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=2        
+;###############################################################################       
+;días quietos seleccionados              
     OPLOT, [dq1,dq1], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=3    
     OPLOT, [dq1+1,dq1+1], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=3   
         
@@ -379,7 +560,9 @@ ENDELSE
     OPLOT, [dq2+1,dq2+1], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=3, color=negro, THICK=3   
     
     OPLOT, [tgm_i, tgm_i], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=5, color=negro, THICK=3 
-    OPLOT, [tgm_f, tgm_f], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=5, color=negro, THICK=3     
+    OPLOT, [tgm_f, tgm_f], [!Y.CRANGE[0], !Y.CRANGE[1]], linestyle=5, color=negro, THICK=3  
+    
+    OPLOT, time, H_STDESV, LINESTYLE=0, THICK=4 , COLOR=rojo                                                              
 ;###############################################################################       
         AXIS, XAXIS = 0, XRANGE=[0,file_number], $
                          XTICKS=file_number, $
@@ -416,8 +599,43 @@ ENDELSE
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    y = 0.92   
    XYOUTS, X, y, time_title, /NORMAL, $
-   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.85 
-;###############################################################################                         
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.65 
+;###############################################################################    
+IF idate0 EQ '200310' THEN BEGIN
+;first panel legend                   
+
+       
+        POLYFILL, [0.07,0.1,0.1,0.07], [0.832,0.832,0.862,0.862], color = verde, $
+        /NORMAL, /LINE_FILL, ORIENTATION=45, THICK=3, LINESTYLE=0, SPACING=0.3
+        
+        POLYFILL, [0.07,0.1,0.1,0.07], [0.832,0.832,0.862,0.862], color = verde, $
+        /NORMAL, /LINE_FILL, ORIENTATION=-45, THICK=3, LINESTYLE=0, SPACING=0.3 
+
+        POLYFILL, [0.07,0.1,0.1,0.07], [0.782,0.782,0.812,0.812], color = verde, $
+        /NORMAL         
+        
+        
+        POLYFILL, [0.07,0.1,0.1,0.07], [0.732,0.732,0.762,0.762], color = amarillo, $
+        /NORMAL
+        
+
+                             
+        XYOUTS, 0.105, 0.83 , /NORMAL, $
+                'DQ', COLOR=negro, $
+                CHARSIZE = 0.9, $
+                CHARTHICK=2
+                
+        XYOUTS, 0.105, 0.78, /NORMAL, $
+                'DQS', COLOR=negro, $
+                CHARSIZE = 0.9, $
+                CHARTHICK=2                
+                
+        XYOUTS,  0.105, 0.73 , /NORMAL, $
+                'TGM', COLOR=negro, $
+                CHARSIZE = 0.9, $
+                CHARTHICK=2                                
+ENDIF
+;###############################################################################                     
     Image=TVRD() 
     TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!
     

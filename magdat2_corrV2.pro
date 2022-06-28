@@ -811,8 +811,8 @@ pro magdat2_corrV2, kp_data, DOY, PNG = png, JPEG = jpeg
             DEVICE, z_buffering=O
             DEVICE, set_character_size = [10, 12]
                  
-            chr_size1 = 0.9
-            chr_thick1= 1.0
+            chr_size1 = 1.2
+            chr_thick1= 1.5
             space     = 0.015
             rojo      = 248
             naranja  = 220
@@ -832,13 +832,13 @@ pro magdat2_corrV2, kp_data, DOY, PNG = png, JPEG = jpeg
     ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
     path = '../rutidl/output/eventos_tgm/'
        str = TeXtoIDL('Amex')
-    window_title = 'Correlacion of Ap and '+str+' Index under TGM conditions'    
+    window_title = 'Correlacion de Ap y '+str+' bajo condiciones de tormenta'    
                          
     up0  =  450
     down0=  -50
     plot, ap1, a_mex1, POSITION=[0.1,0.05,0.95,0.95],$
     xstyle = 5, ystyle=5, YRANGE=[down0,up0], psym=1,$
-    BACKGROUND = blanco, COLOR=negro, XRANGE=[down0,up0]
+    BACKGROUND = blanco, COLOR=negro, XRANGE=[down0,up0], CHARTHICK=1.2 
 ;###############################################################################
 X = [-1, 0, 1, 0, -1]
 Y = [0, 1, 0, -1, 0]
@@ -894,12 +894,14 @@ USERSYM, X, Y, /fill
    x1= slope
    y1=slope
    plot, x1,y1, xstyle=5, ystyle=5, color=negro, background=blanco, $
-   position=[0.1,0.05,0.95,0.95], title = window_title, /noerase, CHARSIZE = 0.9
+   position=[0.1,0.08,0.95,0.95], title = window_title, /noerase, CHARSIZE = 1.2,$
+   CHARTHICK=1.2
         AXIS, XAXIS = 0, XRANGE=[down0,up0], $
                          COLOR=negro, $
                          xstyle=1, $
-                         CHARSIZE = 0.9, $
-                         XTITLE = 'Ap  [nT]', $
+                         CHARTHICK=1.2,$
+                         CHARSIZE = 1.2, $
+                         XTITLE = '', $
 ;                         CHARTHICK=chr_thick1, $
                          XTICKLEN=0.04
                          
@@ -910,21 +912,21 @@ USERSYM, X, Y, /fill
                          XTICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[down0,up0], $
-                         YTITLE = str+' [nT]', $                          
+                         YTITLE = '', $                          
                          COLOR=negro, $
                          ystyle=1, $
-                         CHARSIZE = 0.9;, $
-
+                         CHARSIZE = 1.2, $
+                         CHARTHICK=1.2
                         
         AXIS, YAXIS = 1, YRANGE=[down0,up0], $
                          ystyle=1, $
                          COLOR=negro, $
                          yTICKFORMAT='(A1)',$
-                         CHARSIZE = 0.6;, $
+                         CHARSIZE = 1.2;, $
                         ; CHARTHICK=chr_thick1;, $   
     
         XYOUTS, 0.192, 0.89 , /NORMAL, $
-                'EVENT CODE:', COLOR=negro, $
+                'Eventos:', COLOR=negro, $
                 CHARSIZE = chr_size1, $
                 CHARTHICK=chr_thick1        
     
@@ -958,13 +960,19 @@ USERSYM, X, Y, /fill
                 CHARSIZE = chr_size1, $
                 CHARTHICK=chr_thick1 
 
-        POLYFILL, [0.185,0.315,0.315,0.185], [0.713,0.713,0.714,0.714], color = negro, /NORMAL
-        POLYFILL, [0.185,0.315,0.315,0.185], [0.91,0.91,0.911,0.911], color = negro, /NORMAL
+        POLYFILL, [0.185,0.32,0.32,0.185], [0.713,0.713,0.714,0.714], color = negro, /NORMAL
+        POLYFILL, [0.185,0.32,0.32,0.185], [0.91,0.91,0.911,0.911], color = negro, /NORMAL
         
         POLYFILL, [0.185,0.18505,0.18505,0.185], [0.713,0.713,0.911,0.911], color = negro, /NORMAL
-        POLYFILL, [0.315,0.31505,0.31505,0.315], [0.713,0.713,0.911,0.911], color = negro, /NORMAL                               
+        POLYFILL, [0.32,0.3205,0.3205,0.32], [0.713,0.713,0.911,0.911], color = negro, /NORMAL                                
 ;###############################################################################    
-               
+   y = (!Y.Window[1] - !Y.Window[0]) / 2. + !Y.Window[0] 
+   XYOUTS, 0.03, y, str+'  [nT]', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, ORIENTATION=90, CHARTHICK=1.2
+
+   x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
+   XYOUTS, X, 0.02, 'Ap [nT]', /NORMAL, $
+   COLOR=negro, ALIGNMENT=0.5, CHARSIZE=1.2, CHARTHICK=1.2               
 
     ;print, n_elements(H1), n_elements(dst1)
 

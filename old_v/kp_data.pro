@@ -334,7 +334,7 @@ pro plotting, resulting_data, in, tp, ini, fn, PNG = png, JPEG = jpeg, DIR = dir
     ;print, n_elements(ventana_t)
     caldat, julday(1, ini, year[0]), ini_month, dy
     
-    Kp      = i_kp[(ini*8)-7:fn*8]
+    Kp      = i_kp[(ini*8)-8:fn*8]
     ;Kp_idx = i_kp[ini:fn]    
     ;PRINT, Kp
     

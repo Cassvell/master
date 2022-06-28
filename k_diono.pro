@@ -69,7 +69,7 @@ function dst_data, initial
 		return, r_dst
 end
 
-function DH_teo, date
+function teo, date
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
@@ -78,14 +78,17 @@ function DH_teo, date
 	day 	= date[2]	
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 ;reading data files
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         date = string(year, month, day, format = '(I4, I02, I02)')
+       ; sts  = string(stats, format = '(A5)')
 		
-		file_name = '../rutidl/dH_teo/'+'teo_'+date+'.dst.early'
+		file_name = '../rutidl/teoloyucan/hourly/'+'teo_'+date+'h.dat'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
 		number_of_lines = FILE_LINES(file)
+	   ; print, number_of_lines
 		data = STRARR(number_of_lines)
 
 		openr, lun, file, /GET_LUN, ERROR=err
@@ -94,13 +97,13 @@ function DH_teo, date
 		FREE_LUN, lun
 ;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
 ;extracting data and denfining an structure data
-        DStruct = {hora : 0, D_stdesv : 0., D : 0., H_stdesv : 0., H : 0., $
-        Z_stdesv : 0., Z : 0., N_stdesv : 0., N : 0., F_stdesv : 0., F : 0.}
+;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+        DStruct = {H : 0.}
 
 		teo_mag = REPLICATE(DStruct, number_of_lines)	
   
 		READS, data[0:number_of_lines-1], teo_mag, $
-		FORMAT='(I2, F10, F8, F10, F10, F10, F10, F10, F10, F10, F10)'		
+		FORMAT='(F10)'		
 		return, teo_mag		
 end
 
@@ -274,11 +277,12 @@ function baseline_sq, date
 	
 	yr	= date[0]
 	mh	= date[1]
+	dy  = date[2]
 
-        date = string(yr, mh, format = '(I4, "-", I02)')
+        date = string(yr, mh, dy, format = '(I4,I02,I02)')
         header=0
 
-		file_name = '../rutidl/output/Bsq_baselines/'+'Bsq_'+date+'.txt'
+		file_name = '../rutidl/output/Bsq_baselines/'+'Bsq_'+date+'h.dat
 	
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
@@ -291,11 +295,11 @@ function baseline_sq, date
 		CLOSE, lun
 		FREE_LUN, lun
 		
-        DStruct = {year : 0, month : 0, day : 0, hour : 0, doy : 0, Bsq : 0.}                                   
-
+        ;DStruct = {year : 0, month : 0, day : 0, hour : 0, doy : 0, Bsq : 0.}                                   
+        DStruct = {Bsq : 0.}
 		B_sq = REPLICATE(DStruct, number_of_lines-header)	
 		READS, data[header:number_of_lines-1], B_sq, $
-	 format='(I4,X, I02,X, I02, 2X, I02, 2X, I03, 2X, F08.4)' 		
+	 format='(F08.4)' 		
 		return, B_sq
 end
 
@@ -366,7 +370,7 @@ function Date2DOY, idate
 	END
 	
 	
-pro k_diono, r_dst, r_kp, B_sq, DOY, date_i, date_f, JPEG = jpeg 
+pro k_diono, r_dst, r_kp, DOY, date_i, date_f, JPEG = jpeg 
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
@@ -426,10 +430,10 @@ ENDCASE
        file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
         string_date        = STRARR(file_number)    
                    
-        data_file_name_dh  = STRARR(file_number)
+        data_file_name_h  = STRARR(file_number)
         data_file_name_km  = STRARR(file_number)
         data_file_name_kmn = STRARR(file_number)                
-        
+        data_file_name_bsq  = strarr(file_number)                               
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -439,23 +443,27 @@ ENDCASE
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = STRING(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
                 
-                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'
+                data_file_name_h[i] = '../rutidl/teoloyucan/hourly/'+'teo_'+string_date[i]+'h.dat'
                 data_file_name_km[i] = '../rutidl/Kmex/'+'teo_'+string_date[i]+'.index.final'
 		        data_file_name_km[i] = '../rutidl/Kmex/new_kmex/new_km'+string_date[i]+'.txt'
-		        
+                data_file_name_bsq[i] = '../rutidl/output/Bsq_baselines/BsqV2_'+string_date[i]+'.txt'
+                		        
 		        file = FILE_SEARCH(data_file_name_km[i], COUNT=opened_files)
 	            IF opened_files NE N_ELEMENTS(file) THEN BEGIN
 	                data_file_name_km[i] = '../rutidl/Kmex/'+'teo_'+string_date[i]+'.index.early'    
 	            ENDIF 	                            
         ENDFOR
 
-        exist_data_file_dh   = FILE_TEST(data_file_name_dh)
-        capable_to_plot_dh   = N_ELEMENTS(where(exist_data_file_dh EQ 1))
+        exist_data_file_h   = FILE_TEST(data_file_name_h)
+        capable_to_plot_h   = N_ELEMENTS(where(exist_data_file_h EQ 1))
 
         exist_data_file_km   = FILE_TEST(data_file_name_km)
         capable_to_plot_km   = N_ELEMENTS(where(exist_data_file_km EQ 1))
-        
-        IF capable_to_plot_dh NE N_ELEMENTS(data_file_name_dh) THEN BEGIN 
+
+        exist_data_file_bsq   = FILE_TEST(data_file_name_bsq)
+        capable_to_plot_bsq   = N_ELEMENTS(where(exist_data_file_bsq EQ 1))   
+                
+        IF capable_to_plot_h NE N_ELEMENTS(data_file_name_h) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
                 PRINT, FORMAT="('                missing GMS_YYYYMMDD.dh_index.',A,' impossible to plot all data.')"              
         ENDIF
@@ -466,15 +474,15 @@ ENDCASE
         ENDIF
                         
         H    = FLTARR(file_number*24)                       
-        FOR i = 0, N_ELEMENTS(exist_data_file_dh)-1 DO BEGIN
-                IF exist_data_file_dh[i] EQ 1 THEN BEGIN
+        FOR i = 0, N_ELEMENTS(exist_data_file_h)-1 DO BEGIN
+                IF exist_data_file_h[i] EQ 1 THEN BEGIN
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
                         READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        d_dh = DH_teo([tmp_year, tmp_month, tmp_day])
+                        d_h = teo([tmp_year, tmp_month, tmp_day])
                         
-                        H[i*24:(i+1)*24-1] = d_dh.H[*]
+                        H[i*24:(i+1)*24-1] = d_h.H[*]
                                                                                                                        
                 ENDIF ELSE BEGIN
                         H[i*24:(i+1)*24-1] = 999999.0
@@ -513,7 +521,7 @@ ENDCASE
         
     k_days = findgen(tw*8)/8.0 
         i_nan1 = WHERE(H EQ 999999.0, ncount)
-        i_nan2 = WHERE(H GT 100.0, n2count)
+        i_nan2 = WHERE(H EQ 99999.0, n2count)
         
         prcent_nan = FLOAT(ncount+n2count)*100.0
         print,'porcentaje de valores NaN:', prcent_nan/n_elements(H),'%'
@@ -525,8 +533,8 @@ ENDCASE
         ENDFOR
         
         FOR i=0, N_ELEMENTS(H)-1 DO BEGIN
-            IF H[i] GE 100.0 THEN BEGIN
-                H[WHERE(H[*] GE 100.0)] = !Values.F_NAN          
+            IF H[i] EQ 99999.0 THEN BEGIN
+                H[WHERE(H[*] EQ 99999.0)] = !Values.F_NAN          
             endif
         ENDFOR               
     ;implementar una función de interpolación en caso de que el porcentaje de 
@@ -544,23 +552,19 @@ ENDCASE
     new_dst = FLTARR(N_ELEMENTS(new_dstdays))     	       
 ;############################################################################### 
 ; define diurnal baseline  
-    sqline = baseline_sq([yr_i, mh_i])    
-    sq_doy  = sqline.doy
-    Bsq_ln   = sqline.Bsq
-
-    tmp_doy = dst_doy[(idoy*24)-24:fdoy*24-1]
-    Bsq     = FLTARR(N_ELEMENTS(Bsq_ln))    
-    
-    tmp_doy = tmp_doy[uniq(tmp_doy, sort(tmp_doy))]    
-    FOR i=0, N_ELEMENTS(tmp_doy)-1 DO BEGIN
-            FOR j=0, N_ELEMENTS(sq_doy)-1 DO BEGIN
-                IF tmp_doy[i] EQ sq_doy[j] THEN BEGIN
-               Bsq[j]    = Bsq_ln[j]                            
-                ENDIF 
-            ENDFOR
-    ENDFOR
-b_sq = WHERE(Bsq eq 0, zcount, COMPLEMENT=val, NCOMPLEMENT=valcount)
-Bsq      = Bsq[val]
+        Bsq    = FLTARR(file_number*24)                       
+        FOR i = 0, N_ELEMENTS(exist_data_file_bsq)-1 DO BEGIN
+                IF exist_data_file_bsq[i] EQ 1 THEN BEGIN
+                        tmp_year    = 0
+                        tmp_month   = 0
+                        tmp_day     = 0
+                        READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
+                        sqline = baseline_sq([tmp_year, tmp_month, tmp_day])
+                        
+                        Bsq[i*24:(i+1)*24-1] = sqline.Bsq[*]
+                                                                                                                       
+                ENDIF                
+        ENDFOR
 ;###############################################################################
 ; define frequencies  
    mlat         = 28.06*!pi
@@ -568,6 +572,7 @@ Bsq      = Bsq[val]
    p_a          = dst*ld
    baseline     = Bsq + p_a             
    diono   = H-baseline
+  ; print, Bsq
    time = 3600.0
    fn      = FLOAT(1.0/(2.0*time)) ; frecuencia de Nyquist       
 ;###############################################################################
@@ -584,7 +589,7 @@ CASE passband_l of
     '200505' : passband_l = 1.2e-5  ;23:08
     '201503' : passband_l = 1.14e-5 ;24:21
     '201705' : passband_l = 0.9e-5  ;30:51
-    '201709' : passband_l = 1.2e-5  ;23:08
+    '201709' : passband_l = 0.95e-5  ;23:08
     ELSE: PRINT, 'fuera de rango'
 ENDCASE  
 ;###############################################################################
@@ -644,7 +649,7 @@ ENDCASE
         amarillo  = 190
         verde     = 150
         negro     = 0
-        azul      = 70
+        azul      = 90
         blanco    = 255
         gris      = 110
         morado    = 16
@@ -691,7 +696,7 @@ CASE spam_i of
     '200505' : spam_i = 100
     '201503' : spam_i = 0
     '201705' : spam_i = 0
-    '201709' : spam_i = 100
+    '201709' : spam_i = 0
     ELSE: PRINT, 'fuera de rango'
 ENDCASE 
 ;###############################################################################
@@ -699,10 +704,10 @@ ENDCASE
 CASE spam_f of
     '200311' : spam_f = 2800
     '200411' : spam_f = 4400
-    '200505' : spam_f = 1800
-    '201503' : spam_f = 3300
-    '201705' : spam_f = 1440
-    '201709' : spam_f = 1880
+    '200505' : spam_f = 0
+    '201503' : spam_f = 0
+    '201705' : spam_f = 0
+    '201709' : spam_f = 0
     ELSE: PRINT, 'fuera de rango'
 ENDCASE    
 ;###############################################################################
@@ -735,40 +740,7 @@ ENDCASE
      PLOT, tot_days, dp2, XTICKS=file_number, XMINOR=8, BACKGROUND = blanco, $
      COLOR=negro, CHARSIZE = chr_size1, CHARTHICK=chr_thick1, $
      POSITION=[0.1,0.58,0.95,0.9], XSTYLE = 5, XRANGE=[0, tw], YSTYLE = 6,$
-     XTICKNAME=REPLICATE(' ', tw+1), YRANGE=[downdp2,updp2], /NODATA
-;###############################################################################
-    ddyn_i = idate0
-CASE ddyn_i of
-    '200311' : ddyn_i = ddyn_out[0]
-    '200411' : ddyn_i = ddyn_out[0]
-    '200505' : ddyn_i = ddyn_out[100]
-    '201503' : ddyn_i = ddyn_out[0]
-    '201705' : ddyn_i = ddyn_out[0]
-    '201709' : ddyn_i = ddyn_out[0]
-    ELSE: PRINT, 'fuera de rango'
-ENDCASE 
-;###############################################################################
-    ddyn_si = idate0
-CASE ddyn_si of
-    '200311' : ddyn_si = -200
-    '200411' : ddyn_si = -100
-    '200505' : ddyn_si = -160
-    '201503' : ddyn_si = -100
-    '201705' : ddyn_si = -130
-    '201709' : ddyn_si = -180
-    ELSE: PRINT, 'fuera de rango'
-ENDCASE 
-;###############################################################################
-    ddyn_sf = idate0
-CASE ddyn_sf of
-    '200311' : ddyn_sf = -800
-    '200411' : ddyn_sf = 300
-    '200505' : ddyn_sf = 470
-    '201503' : ddyn_sf = 170
-    '201705' : ddyn_sf = 280
-    '201709' : ddyn_sf = 350
-    ELSE: PRINT, 'fuera de rango'
-ENDCASE          
+     XTICKNAME=REPLICATE(' ', tw+1), YRANGE=[downdp2,updp2], /NODATA          
 ;###############################################################################
     med_dp2 = MEDIAN(new_dp2)
     std_dp2 = STDDEV(new_dp2, /NAN)
@@ -783,37 +755,37 @@ ENDCASE
     dp2_diff_in[dp2_out]=!Values.F_NAN     
 ;###############################################################################
     dp2_i = idate0
-CASE dp2_i of
+case dp2_i of
     '200311' : dp2_i = dp2_out[6]
     '200411' : dp2_i = dp2_out[50]
-    '200505' : dp2_i = dp2_out[0]
-    '201503' : dp2_i = dp2_out[0]
-    '201705' : dp2_i = dp2_out[0]
-    '201709' : dp2_i = dp2_out[350]
-    ELSE: PRINT, 'fuera de rango'
-ENDCASE  
-;###############################################################################
+    '200505' : dp2_i = dp2_out[100]
+    '201503' : dp2_i = dp2_out[500]
+    '201705' : dp2_i = dp2_out[100]
+    '201709' : dp2_i = dp2_out[500]
+    else: print, 'fuera de rango'
+endcase  
+
     dp2_si = idate0
-CASE dp2_si of
+case dp2_si of
     '200311' : dp2_si = 0
     '200411' : dp2_si = -100
-    '200505' : dp2_si = -200
-    '201503' : dp2_si = -100
-    '201705' : dp2_si = -100
-    '201709' : dp2_si = -100
-    ELSE: PRINT, 'fuera de rango'
-ENDCASE 
-;###############################################################################
+    '200505' : dp2_si = -100
+    '201503' : dp2_si = -730
+    '201705' : dp2_si = -50
+    '201709' : dp2_si = 0
+    else: print, 'fuera de rango'
+endcase 
+
     dp2_sf = idate0
-CASE dp2_sf of
+case dp2_sf of
     '200311' : dp2_sf = 20
     '200411' : dp2_sf = 100
-    '200505' : dp2_sf = 50
-    '201503' : dp2_sf = 100
-    '201705' : dp2_sf = 130
-    '201709' : dp2_sf = -400
-    ELSE: PRINT, 'fuera de rango'
-ENDCASE       
+    '200505' : dp2_sf = 350
+    '201503' : dp2_sf = 550
+    '201705' : dp2_sf = 900
+    '201709' : dp2_sf = 990
+    else: print, 'fuera de rango'
+endcase 
 ;############################################################################### 
         OPLOT, new_dstdays ,new_idiff-new_ddyn, COLOR=negro, LINESTYLE=0, THICK=4          
         OPLOT, new_dstdays, new_dp2, COLOR=rojo

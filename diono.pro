@@ -28,7 +28,7 @@
 ;
 ;output files:
 ;
-function tec_data, idate
+FUNCTION tec_data, idate
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
@@ -37,15 +37,14 @@ function tec_data, idate
 	iday 	= idate[2]		
 
         header = 1      ; Defining number of lines of the header 
-
+        path='/home/c-isaac/Escritorio/proyecto/master_thesis/datos'
         idate = string(iyear, imonth, iday, format = '(I4, "-", I02, "-", I02)')
-		file_name = '../rutidl/tec/'+'tec_'+idate+'.txt'
+		file_name = path+'/tec/'+'tec_'+idate+'.txt'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
 		number_of_lines = FILE_LINES(file)
-	   ; print, number_of_lines
 		data = STRARR(number_of_lines)
 
 		openr, lun, file, /GET_LUN, ERROR=err
@@ -57,33 +56,27 @@ function tec_data, idate
 		r_tec = REPLICATE(DStruct, number_of_lines-header)	      
 		READS, data[header:number_of_lines-1], r_tec, $
 	format='(F3, X, F5, X, F5)'		
-		return, r_tec
-end
+		RETURN, r_tec
+END
 
-function dst_data, initial
+FUNCTION dst_data, date
 
 	On_error, 2
-	compile_opt idl2, HIDDEN
-
-	year = string(initial, format = '(I4)')
-	;type_data = string(tp, format = '(A)')
-		file_name = '../rutidl/dst/Dst_'+ year+'-01-01_'+year+'-12-31_D.dat'
-		
-        header = 25             ; Defining number of lines of the header 
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+	COMPILE_OPT idl2, HIDDEN
+    
+	year	= date[0]
+	month	= date[1]
+	day 	= date[2]	
+;###############################################################################
 ;reading data files
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-	
+        path='/home/c-isaac/Escritorio/proyecto/master_thesis/datos'
+        date = string(year, month, day, format = '(I4,"-",I02,"-",I02)')
+		file_name = path+'/dst/daily/dst_'+date+'.txt'
+        header = 1             ; Defining number of lines of the header 
+;###############################################################################
+;reading data files
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
-		
-	    IF opened_files NE N_ELEMENTS(file) THEN begin
-	        file_name = '../rutidl/dst/Dst_'+ year+'-01-01_'+year+'-12-31_P.dat'
-	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
-    	    IF opened_files NE N_ELEMENTS(file) THEN begin
-    	        file_name = '../rutidl/dst/Dst_'+ year+'-01-01_'+year+'-12-31_Q.dat'
-	            file = FILE_SEARCH(file_name, COUNT=opened_files)    	        
-    	        IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  
-    	    ENDIF    	    	    
-	    ENDIF
+		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'		
 
 		number_of_lines = FILE_LINES(file)
 		data = STRARR(number_of_lines)
@@ -94,45 +87,41 @@ function dst_data, initial
 		FREE_LUN, lun
 
         DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, $
-        DOY : 0, Dst: 0}
+        second : 0, DOY : 0, Dst: 0}
 
 		r_dst = REPLICATE(DataStruct, number_of_lines-header)	        
         
 		READS, data[header:number_of_lines-1], r_dst, $
-		FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,8X,I3,X,I6)'
-		
-		return, r_dst
-end
+		FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,X,I2,I04,I5)'
+		RETURN, r_dst
+END
 
-function DH_teo, date
+FUNCTION DH_teo, date
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
 	year	= date[0]
 	month	= date[1]
 	day 	= date[2]	
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;###############################################################################
 ;reading data files
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         date = string(year, month, day, format = '(I4, I02, I02)')
-       ; sts  = string(stats, format = '(A5)')
-		
-		file_name = '../rutidl/dH_teo/'+'teo_'+date+'.dst.early'
+
+        path='/home/c-isaac/Escritorio/proyecto/master_thesis/datos'		
+		file_name = path+'/dH_teo/'+'teo_'+date+'.dst.early'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
 		number_of_lines = FILE_LINES(file)
-	   ; print, number_of_lines
 		data = STRARR(number_of_lines)
 
 		openr, lun, file, /GET_LUN, ERROR=err
 		readf, lun, data, FORMAT = '(A)'
 		CLOSE, lun
 		FREE_LUN, lun
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;###############################################################################
 ;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         DStruct = {hora : 0, D_stdesv : 0., D : 0., H_stdesv : 0., H : 0., $
         Z_stdesv : 0., Z : 0., N_stdesv : 0., N : 0., F_stdesv : 0., F : 0.}
 
@@ -140,11 +129,11 @@ function DH_teo, date
   
 		READS, data[0:number_of_lines-1], teo_mag, $
 		FORMAT='(I2, F10, F8, F10, F10, F10, F10, F10, F10, F10, F10)'		
-		return, teo_mag		
-end
+		RETURN, teo_mag		
+END
 
 
-function ip_data, date
+FUNCTION ip_data, date
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
@@ -152,19 +141,16 @@ function ip_data, date
 	month	= date[1]	
 
         header = 60      ; Defining number of lines of the header 
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;###############################################################################
 ;reading data files
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-
         date = string(year, month, format = '(I4, "-", I02)')
-		
-		file_name = '../rutidl/ip/'+date+'.dat'
+        path='/home/c-isaac/Escritorio/proyecto/master_thesis/datos'				
+		file_name = path+'/ip/'+date+'.dat'
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
 		number_of_lines = FILE_LINES(file)
-	   ; print, number_of_lines
 		data = STRARR(number_of_lines)
 
 		openr, lun, file, /GET_LUN, ERROR=err
@@ -195,31 +181,30 @@ FORMAT='(I4,I4,I3,I5,I3,I3,I4,I4,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,F6,'+$
 end
 
 
-function kmex, date
+FUNCTION kmex, date
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
 	year	= date[0]
 	month	= date[1]
 	day 	= date[2]	
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;###############################################################################
 ;reading data files
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-        date = string(year, month, day, format = '(I4, I02, I02)')		
-		name = 'teo_'+date+'.index.'
+        date = string(year, month, day, format = '(I4, I02, I02)')
 		
-		file_name = '../rutidl/Kmex/'+name+'final'		
+		name = 'teo_'+date+'.index.'
+		path='/home/c-isaac/Escritorio/proyecto/master_thesis/datos'
+		file_name = path+'/Kmex/'+name+'final'		
 		
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 	    IF opened_files NE N_ELEMENTS(file) THEN begin
-	        file_name = '../rutidl/Kmex/'+name+'early'
+	        file_name =  path+'/Kmex/'+name+'early'
 	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
     	    IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  
 	    
-	    endif
+	    ENDIF
 
 		number_of_lines = FILE_LINES(file)
-	   ; print, number_of_lines
 		data = STRARR(number_of_lines)
 
 		openr, lun, file, /GET_LUN, ERROR=err
@@ -227,9 +212,8 @@ function kmex, date
 		readf, lun, data, FORMAT = '(A)'
 		CLOSE, lun
 		FREE_LUN, lun
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;###############################################################################
 ;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-        
         idx_kmex      = {k_mex      : intarr(8), $
                          k_mex_sum  : 0, $
                          a_mex      : intarr(8), $
@@ -239,41 +223,32 @@ function kmex, date
         
         tmp_var = replicate(struct, 2)
 
-	;	idx_kmex = REPLICATE(DStruct, number_of_lines-header)	
-  
 		READS, data, tmp_var, FORMAT='(I3, I4, I4, I4, I4, I4, I4, I4, I4)'
 		
 		idx_kmex.k_mex[*]   = tmp_var[0].x
 		idx_kmex.a_mex[*]   = tmp_var[1].x
         idx_kmex.k_mex_sum  = tmp_var[0].y
-        idx_kmex.a_med      = tmp_var[1].y		
-		
-		return, idx_kmex	
-end
+        idx_kmex.a_med      = tmp_var[1].y				
+		RETURN, idx_kmex	
+END    
 
-function kp_data, in
+FUNCTION kp_data, date
 
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
-        header = 36             ; Defining number of lines of the header 
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+	year	= date[0]
+	month	= date[1]
+	day 	= date[2]	
+;###############################################################################
 ;reading data files
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-        year = string(in, format = '(I4)')
-		file_name = '../rutidl/kp/Kp_'+ year+'-01-01_'+year+'-12-31_D.dat'
-		
+        date = string(year, month, day, format = '(I4,"-",I02,"-",I02)')
+        path='/home/c-isaac/Escritorio/proyecto/master_thesis/datos'
+		file_name = path+'/kp/daily/kp_'+date+'.txt'
+        header = 1             ; Defining number of lines of the header 
+;###############################################################################
+;reading data files
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
-
-	    IF opened_files NE N_ELEMENTS(file) THEN begin
-	        file_name = '../rutidl/kp/Kp_'+ year+'-01-01_'+year+'-12-31_P.dat'
-	        file = FILE_SEARCH(file_name, COUNT=opened_files) 
-    	    IF opened_files NE N_ELEMENTS(file) THEN begin
-    	        file_name = '../rutidl/kp/Kp_'+ year+'-01-01_'+year+'-12-31_Q.dat'
-	            file = FILE_SEARCH(file_name, COUNT=opened_files)    	        
-    	        IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+'not found'  
-    	    ENDIF    	    	    
-	    ENDIF     
         
 		number_of_lines = FILE_LINES(file)
 		data = STRARR(number_of_lines)
@@ -282,115 +257,22 @@ function kp_data, in
 		readf, lun, data, FORMAT = '(A)'
 		CLOSE, lun
 		FREE_LUN, lun
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;###############################################################################
 ;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-
-        DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, $
+        DataStruct = {year : 0, month : 0, day : 0, hour : 0, minute: 0, second : 0,$
                       DOY : 0, Kp: 0, Kp_str: '', Ap: 0}
 
-		resulting_data0 = REPLICATE(DataStruct, number_of_lines-header)	
-        ;print, number_of_lines-header-1, number_of_lines-header+1
-        
-        
-		READS, data[header:number_of_lines-1], resulting_data0, $
-		FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,8X,I3,X,I1,A1,X,I3)'
-		
-		indexes_07 = WHERE(resulting_data0[*].Kp_str EQ '-')
-		indexes_03 = WHERE(resulting_data0[*].Kp_str EQ '+')
-		indexes_00 = WHERE(resulting_data0[*].Kp_str EQ 'o')
-		
-		Kp_tmp = resulting_data0[*].Kp*10
-		
-		Kp_tmp[indexes_07] = Kp_tmp[indexes_07]-3
-		Kp_tmp[indexes_03] = Kp_tmp[indexes_03]+3
+
+		r_kp = REPLICATE(DataStruct, number_of_lines-header)	
+                
+		READS, data[header:number_of_lines-1], r_kp, $
+		FORMAT='(I4,X,I2,X,I2,X,I2,X,I2,X,I2,I04,I02,A1,I04)'
+			
+		RETURN, r_kp
+END   
 
 
-                DataStruct2 = {year : 0, month : 0, day : 0, hour : 0, minute: 0, $
-                      DOY : 0, Kp: 0, Ap: 0}
-
-		resulting_data = REPLICATE(DataStruct2, number_of_lines-header)	
-
-		resulting_data[*].year   = resulting_data0[*].year
-		resulting_data[*].month  = resulting_data0[*].month
-		resulting_data[*].day    = resulting_data0[*].day
-		resulting_data[*].hour   = resulting_data0[*].hour
-		resulting_data[*].minute = resulting_data0[*].minute
-		resulting_data[*].DOY    = resulting_data0[*].DOY
-		resulting_data[*].Kp     = Kp_tmp[*]
-		resulting_data[*].Ap     = resulting_data0[*].AP				
-		return, resulting_data
-end  
-
-
-function Date2DOY, idate
-;	Check data type of input set ascII flag and convert to yy,mm,dd:
-	info = SIZE(idate)
-	IF (info(0) eq 0) THEN BEGIN
-	  scalar = 1				;scalar flag set
-	ENDIF ELSE BEGIN
-	  scalar = 0				;vector input
-	ENDELSE
-
-	IF (info(info(0) + 1) eq 7) THEN BEGIN
-	  ascII = 1				;ascII input flag set
-	  yy = FIX(STRMID(idate,0,2))		;extract year
-	  mm = FIX(STRMID(idate,2,2))		;extract month
-	  dd = FIX(STRMID(idate,4,2))		;extract day
-	ENDIF ELSE BEGIN			;should be a longWord
-	  ascII = 0				;non-ascII input
-	  sdate = STRTRIM(STRING(idate),2)	;convert to string 
-	  yy = FIX(STRMID(sdate,0,2))		;extract year
-	  mm = FIX(STRMID(sdate,2,2))		;extract month
-	  dd = FIX(STRMID(sdate,4,2))		;extract day
-	ENDELSE
-
-;	Check for leap year and compute DOY:
-;       	      J   F   M   A   M   J   J   A   S   O   N   D
-	imonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
-	IF (scalar) THEN BEGIN			;scalar input
-	  IF ((yy MOD 4) eq 0) THEN BEGIN	;leap year
-	    imonth(2) = 29			;set feb
-	  ENDIF
-	  DOY = FIX( TOTAL(imonth(0:mm-1)) ) + dd
-	ENDIF ELSE BEGIN
-	  DOY = dd				;set correct len on vector
-	  leapYrs = WHERE( (yy MOD 4) eq 0)	;index of leap years
-	  nonLeap = WHERE( (yy MOD 4) ne 0)	;index of non-leap years
-	  IF (nonLeap(0) ne -1) THEN BEGIN
-	    FOR i=0, N_elements(nonLeap)-1 DO BEGIN
-	      DOY(nonLeap(i)) = FIX( TOTAL(imonth(0:mm(nonLeap(i))-1)) ) + $
-				dd(nonLeap(i))
-	    ENDFOR
-	  ENDIF
-	  IF (leapYrs(0) ne -1) THEN BEGIN
-	    imonth(2) = 29			;set feb
-	    FOR i =0, N_elements(leapYrs)-1 DO BEGIN
-	      DOY(leapYrs(i)) = FIX( TOTAL(imonth(0:mm(leapYrs(i))-1)) ) + $
-				dd(leapYrs(i))
-	    ENDFOR
-	  ENDIF
-	ENDELSE
-
-	IF (N_PARAMS() EQ 3) THEN BEGIN         ;pass year back to caller
-          IF (ascII) THEN BEGIN
-	    DOY = STRTRIM( STRING(DOY), 2)	;convert to string	    
-	    yr = STRTRIM( STRING(yy), 2)	;convert to string	  
-	  ENDIF ELSE BEGIN
-	    yr = yy	
-	  ENDELSE			
-	ENDIF ELSE BEGIN			;pass DOY only
-	  IF (ascII) THEN BEGIN
-	    DOY = STRTRIM( STRING(DOY), 2)	;convert to string
-	  ENDIF
-	ENDELSE
-	;print, uint(DOY)  
-	return, DOY
-	END
-
-
-pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
+PRO diono, r_ip, date_i, date_f
 	On_error, 2
 	compile_opt idl2, HIDDEN
 
@@ -400,51 +282,25 @@ pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
 
 	yr_f	= date_f[0]
 	mh_f	= date_f[1]
-	dy_f 	= date_f[2]
-
-    d_dst = dst_data(yr_i)     
-    i_dst   = d_dst.Dst
-    hour    = d_dst.hour
-    dst_doy = d_dst.DOY          
-;###############################################################################   
-    d_dst = dst_data(yr_i)
-    t = n_elements(d_dst.year)    
-    i_dst = d_dst.Dst
-;###############################################################################   
-    d_kp = kp_data(yr_i)     
-    i_kp = d_kp.Kp       
+	dy_f 	= date_f[2]      
 ;###############################################################################    
-    year = d_dst.year
-    tiempo = TIMEGEN(t, START=julday(d_dst.month[0], d_dst.day[0],  $
-                     d_dst.year[0], d_dst.hour[0]), UNITS='Hours')  
-                                        
-        iyear = strmid(string(yr_i, format='(I4)'),2,2)
-        fyear = strmid(string(yr_f, format='(I4)'),2,2)
-                
-        idoy      = Date2DOY(string(iyear, mh_i, dy_i,format = '(I02,I02,I02)'))
-        fdoy      = Date2DOY(string(fyear, mh_f, dy_f,format = '(I02,I02,I02)'))         
-            
-    time_w  = tiempo[idoy:fdoy]
-    tw      = n_elements(time_w)
-    tot_days= findgen(tw*24)/24.0
-    
-    dst     = i_dst[(idoy*24)-24:fdoy*24-1]    
-    Date    = string(year[0], mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
-    
-    kp      =  i_kp[(idoy*8)-8:fdoy*8-1]     
-    kp      = kp/10.0
+    file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
+    tot_days= findgen(file_number*24)/24.0    
+    Date    = string(yr_i, mh_i, dy_i, FORMAT='(I4, "-", I02, "-", I02)')
 ;###############################################################################
 ; define DH variables
-;###############################################################################
-       file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1 
-               
-        data_file_name_dh  = strarr(file_number)        
+        data_path='/home/c-isaac/Escritorio/proyecto/master_thesis/datos'
+        
         string_date        = strarr(file_number)
         
+        data_file_name_dh  = strarr(file_number)                
         data_file_name_km  = strarr(file_number)
-        
-        string_date_tec    = strarr(file_number)
-        data_file_name_tec  = strarr(file_number)              
+        data_file_name_kp  = strarr(file_number)  
+        data_file_name_dst = strarr(file_number) 
+        data_file_name_tec  = strarr(file_number) 
+                       
+        string_date_2    = strarr(file_number)
+             
         FOR i=0ll, file_number-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -453,12 +309,14 @@ pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 string_date[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
-                string_date_tec[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4, "-", I02, "-", I02)')
+                string_date_2[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')
                 
-                data_file_name_km[i] = '../rutidl/Kmex/'+'teo_'+string_date[i]+'.index.final'                      
-                data_file_name_dh[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'
-                data_file_name_tec[i] = '../rutidl/tec/'+'tec_'+string_date_tec[i]+'.txt'
-		       
+		        data_file_name_kp[i] = data_path+'/kp/daily/kp_'+string_date_2[i]+'.txt' 	
+                data_file_name_dst[i]= data_path+'/dst/daily/dst_'+string_date_2[i]+'.txt'		        	        
+                data_file_name_dh[i] = data_path+'/dH_teo/'+'teo_'+string_date[i]+'.dst.early'
+                data_file_name_tec[i]= data_path+'/tec/'+'tec_'+string_date_2[i]+'.txt'
+                data_file_name_km[i] = data_path+'/Kmex/'+'teo_'+string_date[i]+'.index.final'
+                		       
 		        file = FILE_SEARCH(data_file_name_km[i], COUNT=opened_files)
 	            IF opened_files NE N_ELEMENTS(file) THEN begin
 	                data_file_name_km[i] = '../rutidl/Kmex/'+'teo_'+string_date[i]+'.index.early'    
@@ -479,7 +337,22 @@ pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
         exist_data_file_km   = FILE_TEST(data_file_name_km)
         capable_to_plot_km   = N_ELEMENTS(where(exist_data_file_km EQ 1))
 
-        
+        exist_data_file_dst   = FILE_TEST(data_file_name_dst)
+        capable_to_plot_dst   = N_ELEMENTS(where(exist_data_file_dst EQ 1))
+
+        IF capable_to_plot_dst NE N_ELEMENTS(data_file_name_dst) THEN BEGIN 
+                PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.dst_index.',A,' impossible to plot all data.')"              
+        ENDIF
+
+        exist_data_file_kp   = FILE_TEST(data_file_name_kp)
+        capable_to_plot_kp   = N_ELEMENTS(where(exist_data_file_kp EQ 1))
+
+        IF capable_to_plot_kp NE N_ELEMENTS(data_file_name_kp) THEN BEGIN 
+                PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
+                PRINT, FORMAT="('                missing GMS_YYYYMMDD.kp_index.',A,' impossible to plot all data.')"              
+        ENDIF
+                
         IF capable_to_plot_dh NE N_ELEMENTS(data_file_name_dh) THEN BEGIN 
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
                 PRINT, FORMAT="('                missing GMS_YYYYMMDD.dh_index.',A,' impossible to plot all data.')"              
@@ -498,7 +371,8 @@ pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
                 PRINT, FORMAT="('CRITICAL ERROR: impossible to read data file(s).')"
                 PRINT, FORMAT="('                missing GMS_YYYYMMDD.km_index.',A,' impossible to plot all data.')"              
         ENDIF
-                                
+;###############################################################################
+; Generate the time variables to plot dH time series                                   
         H    = FLTARR(file_number*24)                       
         FOR i = 0, N_ELEMENTS(exist_data_file_dh)-1 DO BEGIN
                 IF exist_data_file_dh[i] EQ 1 THEN BEGIN
@@ -514,7 +388,8 @@ pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
                         H[i*24:(i+1)*24-1] = 999999.0
                 ENDELSE                
         ENDFOR
-        
+;###############################################################################
+; Generate the time variables to plot TEC time series          
         tec  = fltarr(file_number*12)
         med  = fltarr(file_number*12)
         FOR i = 0, N_ELEMENTS(exist_data_file_tec)-1 DO BEGIN
@@ -522,7 +397,7 @@ pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
-                        READS, string_date_tec[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,X,I02,X,I02)'
+                        READS, string_date_2[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,X,I02,X,I02)'
                  
                         d_tec = tec_data([tmp_year, tmp_month, tmp_day])
                         
@@ -533,7 +408,8 @@ pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
                         med[i*12:(i+1)*12-1] = 999.0
                 ENDELSE                
         ENDFOR
-
+;###############################################################################
+; Generate the time variables to plot kmex time series 
         k_mex    = fltarr(file_number*8)
         a_mex    = INTARR(file_number*8)
         FOR i = 0, N_ELEMENTS(exist_data_file_km)-1 DO BEGIN
@@ -548,8 +424,61 @@ pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
                         a_mex[i*8:(i+1)*8-1] = d_km.a_mex[*]
                 ENDIF             
         ENDFOR
-    k_days = findgen(tw*8)/8.0 
+    k_days = findgen(file_number*8)/8.0 
+;###############################################################################
+;Dst Data                       
+        dst    = FLTARR(file_number*24)                               
+        FOR i = 0, N_ELEMENTS(exist_data_file_dst)-1 DO BEGIN
+                IF exist_data_file_dst[i] EQ 1 THEN BEGIN
+                tmp_year    = 0
+                tmp_month   = 0
+                tmp_day     = 0
+                tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
 
+                CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
+                string_date_2[i] = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')                
+                        dat = dst_data([tmp_year, tmp_month, tmp_day])
+                        
+                        dst[i*24:(i+1)*24-1] = dat.Dst[*]                                                
+                                                                                              
+                ENDIF ELSE BEGIN
+                         dst[i*24:(i+1)*24-1] = 999999.0                      
+                ENDELSE                
+        ENDFOR  
+;###############################################################################
+;Kp Data                       
+        kp    = FLTARR(file_number*8)
+        ap    = FLTARR(file_number*8)
+        str   = STRARR(file_number*8)                              
+        FOR i = 0, N_ELEMENTS(exist_data_file_kp)-1 DO BEGIN
+                IF exist_data_file_kp[i] EQ 1 THEN BEGIN
+                tmp_year    = 0
+                tmp_month   = 0
+                tmp_day     = 0
+                tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
+
+                CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
+                string_date_2[i] = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,"-",I02,"-",I02)')                
+                        dat = kp_data([tmp_year, tmp_month, tmp_day])
+                        kp[i*8:(i+1)*8-1]   = dat.Kp[*]                                               
+                        ap[i*8:(i+1)*8-1]   = dat.Ap[*]
+                        str[i*8:(i+1)*8-1]= dat.Kp_str[*]                                                                      
+                ENDIF ELSE BEGIN
+                         kp[i*8:(i+1)*8-1] = 999999.0
+                         ap[i*8:(i+1)*8-1] = 999999.0                     
+                ENDELSE                
+        ENDFOR
+        
+		indexes_07 = WHERE(str EQ '-')
+		indexes_03 = WHERE(str EQ '+')
+		indexes_00 = WHERE(str EQ 'o')
+
+    IF indexes_03[0] NE -1 AND indexes_07[0] NE -1 THEN BEGIN
+        kp[indexes_07] = kp[indexes_07]-0.3
+        kp[indexes_03] = kp[indexes_03]+0.3
+    ENDIF                  
+;###############################################################################        
+;identifying NAN values in the Time Series
         for i=0, n_elements(tec)-1 do begin
             if tec[i] eq 999.0 then begin
                 tec[where(tec[*] eq 999.0)] = !Values.F_NAN          
@@ -586,14 +515,12 @@ pro diono, r_dst, r_ip, r_kp, DOY, date_i, date_f
     H_exist = where(finite(H_tmp), ngooddata, complement=baddata, ncomplement=nbaddata)
     ; interpolate at the locations of the bad data using the good data    
     if nbaddata gt 0 then H_tmp[baddata] = interpol(H_tmp[H_exist], H_exist, baddata)
-    H = H_tmp  
-;###############################################################################                               
+    H = H_tmp                                 
 ;############################################################################### 
-    tec_days= findgen(tw*12)/12.0  
+    tec_days= findgen(file_number*12)/12.0  
     tec_diff = tec-med    
 ;###############################################################################
-; define ip parameters
-;###############################################################################  
+; define ip parameters  
     ip = ip_data([yr_i, mh_i])
     
     ip_year = ip.year
@@ -636,22 +563,18 @@ p_dyn   = p_dyn[val]
             endif
         endfor   
 ;###############################################################################
-; define device and color parameters 
-;###############################################################################      
+; define device and color parameters       
         Device_bak = !D.Name 
         SET_PLOT, 'Z'
         
-        tmp_spam = 1
-        
-        Xsize=fix(800*tmp_spam)
+        Xsize=fix(800)
         Ysize=1000
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
         DEVICE, z_buffering=0     
         DEVICE, set_character_size = [10, 12]
-      ;  DEVICE, IDL_GR_X_RETAIN=0
         DEVICE, DECOMPOSED=1     
-        chr_size1 = 0.9
-        chr_thick1= 1.0
+        chr_size1 = 1.5
+        chr_thick1= 1.5
         space     = 0.015
         rojo      = 248
         amarillo  = 220
@@ -665,16 +588,11 @@ p_dyn   = p_dyn[val]
     TVLCT, R_bak, G_bak, B_bak, /GET
         
     LOADCT, 39, /SILENT
-
-    path = '../rutidl/output/eventos_tgm/'
 ;###############################################################################
-; Time label
-;###############################################################################    
-     X_label   = STRARR(tw+1)+' '
-    ; print, n_elements(x_label)
+; Time label    
+     X_label   = STRARR(file_number+1)+' '
         months    = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
         old_month = mh_i
-       ; print, old_month
         FOR i =0,  N_ELEMENTS(X_label)-1 DO BEGIN
                 tmp_year    = 0
                 tmp_month   = 0
@@ -684,10 +602,11 @@ p_dyn   = p_dyn[val]
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
                 
                 IF i LT N_ELEMENTS(X_label)-1 THEN $
-                        X_label[i]  = (tmp_month EQ old_month) ? string(tmp_day, FORMAT='(I02)') : months[tmp_month-1]+' '+string(tmp_day, FORMAT='(I02)')
+                        X_label[i]  = (tmp_month EQ old_month) ? string(tmp_day, $
+                        FORMAT='(I02)') : months[tmp_month-1]+' '+string(tmp_day, FORMAT='(I02)')
                 old_month = tmp_month
         ENDFOR
-      
+;###############################################################################      
 case old_month of
     1: old_month = 'Enero'
     2: old_month ='Febrero'
@@ -703,7 +622,7 @@ case old_month of
     12:old_month ='Diciembre'
     else: print, 'fuera de rango'
 endcase    
-
+;###############################################################################
 idate0 = string(yr_i, mh_i, format='(I4,I02)')
 TGM_n = idate0
 case TGM_n of
@@ -716,8 +635,7 @@ case TGM_n of
     else: print, 'fuera de rango'
 endcase      
 ;###############################################################################
-;###############################################################################
-       days = intarr(tw+1)
+       days = intarr(file_number+1)
        for i=0, n_elements(days)-1 do begin
             days[i] = dy_i+i
        endfor
@@ -731,7 +649,6 @@ endcase
                 string(old_month, yr_i, format='(A, X, I4)')
 ;###############################################################################
 ; Plot data
-;###############################################################################
     up_E     = max(Ey)
     down_E   = min(Ey)
     
@@ -740,37 +657,40 @@ endcase
         
     plot, tot_days, Ey, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=negro,$
      CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.1,0.76,0.9,0.93], $
-     XSTYLE = 5, XRANGE=[0, tw],  XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
+     XSTYLE = 5, XRANGE=[0, file_number],  XTICKNAME=REPLICATE(' ', file_number+1), ySTYLE = 6,$
      YRANGE=[down_E,up_E], THICK=4  
 
-   	
+z   	
     plot, tot_days, p_dyn, XTICKS=file_number, xminor=8, BACKGROUND = blanco, COLOR=azul,$
      CHARSIZE = 0.9, CHARTHICK=chr_thick1, POSITION=[0.1,0.76,0.9,0.93], $
-     XSTYLE = 5, XRANGE=[0, tw], YRANGE=[down_p,up_p], XTICKNAME=REPLICATE(' ', tw+1), $
-     ySTYLE = 6, /noerase, THICK=4 ;, SUBTITLE = time_title 
+     XSTYLE = 5, XRANGE=[0, file_number], YRANGE=[down_p,up_p], $
+     XTICKNAME=REPLICATE(' ', file_number+1), ySTYLE = 6, /noerase, THICK=4 ;, SUBTITLE = time_title 
 
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
-                         XTITLE='Tiempo Universal [dias de '+old_month+']', $                           
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
+                         XTITLE='Tiempo Universal [dias]', $                           
                          XMINOR=8, $
                          XTICKNAME=X_label, $
                          COLOR=negro, $
                          CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $      
-                         XTICKS=tw, $
+                         XTICKS=file_number, $
                          XMINOR=8, $
                          XTICKV=FIX(days), $       
                          XTICKN=STRING(days, FORMAT='(I02)'), $  
                          COLOR=negro, $
                          CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
                          TICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[down_E, up_E], $
                          ystyle=2, $  
                          YTITLE = 'Ey [mV/m]', $                          
                          COLOR=negro, $
+                         CHARTHICK=1.5,$
                          CHARSIZE = 0.9;, $
                         
         AXIS, YAXIS = 1, YRANGE=[down_p,up_p], $
@@ -778,114 +698,123 @@ endcase
                          YTITLE = 'P [nPa]', $                          
                          COLOR=azul, $
                          CHARSIZE = 0.9, $
-                         CHARTHICK=2;, $    
-
+                         CHARTHICK=3 
+;###############################################################################
     up      = MAX(H+10)
     down    = MIN(H-10)    
-    plot, tot_days, H, XTICKS=tw, xminor = 8, POSITION=[0.1,0.52,0.9,0.69],$
+    plot, tot_days, H, XTICKS=file_number, xminor = 8, POSITION=[0.1,0.52,0.9,0.69],$
     XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=5, YRANGE=[down, up],$
-    title = '', BACKGROUND = blanco, COLOR=negro, XRANGE=[0, tw],$
-	ytitle = '',  XTICKNAME=REPLICATE(' ', tw+1), /noerase, THICK=4
+    title = '', BACKGROUND = blanco, COLOR=negro, XRANGE=[0, file_number],$
+	ytitle = '',  XTICKNAME=REPLICATE(' ', file_number+1), /noerase, THICK=4
 
     oplot, tot_days, dst, COLOR=verde, linestyle=0, THICK=4   
      dH = TeXtoIDL('\DeltaH') 
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTITLE='Tiempo Universal [dias de '+old_month+']', $  
-                         XTICKS=tw, $
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTITLE='Tiempo Universal [dias]', $  
+                         XTICKS=file_number, $
                          XMINOR=8, $
                          XTICKNAME=X_label, $
                          COLOR=negro, $
                          CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $      
-                         XTICKS=tw, $
+                         XTICKS=file_number, $
                          XMINOR=8, $
                          XTICKV=FIX(days), $       
                          XTICKN=STRING(days, FORMAT='(I02)'), $  
                          CHARSIZE = 0.9, $                         
                          COLOR=negro, $
+                         CHARTHICK=1.5,$
                          TICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[down,up], $
                          YTITLE = dH+' y Dst [nT]', $
                          ystyle=1, $                          
                          COLOR=negro, $
+                         CHARTHICK=1.5,$
                          CHARSIZE = 0.9;, $
                         
         AXIS, YAXIS = 1, YRANGE=[down,up], $       
                          COLOR=negro, $
                          ystyle=1, $
                          CHARSIZE = 0.9, $
-                         CHARTHICK=1;, $
-
-   ; IF MAX(ap) GT MAX(a_mex) THEN up_a = MAX(ap) ELSE up_a = MAX(a_mex)
-  ;  IF MIN(ap) LT MIN(a_mex) THEN down_a = MIN(ap) ELSE down_a = MIN(a_mex) 
-    
-    plot, k_days, k_mex, XTICKS=tw, xminor = 8, POSITION=[0.1,0.28,0.9,0.45],$
+                         CHARTHICK=1.5
+;###############################################################################   
+    plot, k_days, k_mex, XTICKS=file_number, xminor = 8, POSITION=[0.1,0.28,0.9,0.45],$
     XTICKFORMAT='LABEL_DATE', xstyle = 5, ystyle=5, YRANGE=[0,9],$
-    BACKGROUND = blanco, COLOR=negro, XRANGE=[0, tw],$
-	ytitle = '',  XTICKNAME=REPLICATE(' ', tw+1), /noerase, THICK=4
-   ; print, ap
+    BACKGROUND = blanco, COLOR=negro, XRANGE=[0, file_number],$
+	ytitle = '',  XTICKNAME=REPLICATE(' ', file_number+1), /noerase, THICK=4
+
      OPLOT, k_days, kp, COLOR=verde, LINESTYLE=0, THICK=4
 
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTICKS=tw, $
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTICKS=file_number, $
                          XTITLE=time_title, $                         
                          XMINOR=8, $
                          XTICKNAME=X_label, $
                          COLOR=negro, $
                          CHARSIZE = 0.9 , $
+                         CHARTHICK=1.5,$
                          TICKLEN=0.04
                          
-        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
-                         XTICKS=tw, $
+                         IF TGM_n EQ 3 THEN Ltime = 0.25
+                         IF TGM_n EQ 5 THEN Ltime = 0.25
+                         IF TGM_n EQ 6 THEN Ltime = 0.25
+                         IF TGM_n EQ 1 THEN Ltime = 5./24.
+                         IF TGM_n EQ 2 THEN Ltime = 5./24.
+                         IF TGM_n EQ 4 THEN Ltime = 5./24.                                                  
+        AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-Ltime), $
+                         XTICKS=file_number, $
                          XTICKV=FIX(days), $       
                          XTICKN=STRING(days, FORMAT='(I02)'), $                                            
                          XMINOR=8, $ 
                          CHARSIZE = 0.9 , $                       
                          COLOR=negro, $
+                         CHARTHICK=1.5,$
                          TICKLEN=0.04
 
         AXIS, YAXIS = 0, YRANGE=[0,9], $
-                         YTITLE = '', $                          
+                         YTITLE = 'Kp y Kmex', $                          
                          COLOR=negro, $
-                         CHARTHICK=1,$
+                         CHARTHICK=1.5,$
                          YSTYLE=1, $
                          CHARSIZE = 0.9 ;, $
                         
         AXIS, YAXIS = 1, YRANGE=[0,9], $        
                          COLOR=negro, $                         
                          YSTYLE=1, $
+                         CHARTHICK=1.5,$
                          CHARSIZE = 0.9 ;, $  
-;###############################################################################
-;###############################################################################
 ;###############################################################################
     IF MAX(tec) GT MAX(med) THEN up_tecdiff = MAX(tec) ELSE up_tecdiff = MAX(med)
     IF MIN(tec) LT MIN(med) THEN down_tecdiff = MIN(tec) ELSE down_tecdiff = MIN(med)
         
     plot, tec_days, tec, XTICKS=file_number, xminor=8, BACKGROUND = blanco, $
      CHARSIZE = chr_size1, CHARTHICK=chr_thick1, POSITION=[0.1,0.04,0.9,0.21], $
-     XSTYLE = 5, XRANGE=[0, tw], XTICKNAME=REPLICATE(' ', tw+1), ySTYLE = 6,$
+     XSTYLE = 5, XRANGE=[0, file_number], XTICKNAME=REPLICATE(' ', file_number+1), ySTYLE = 6,$
      /noerase, YRANGE=[down_tecdiff, up_tecdiff], THICK=4, COLOR=rojo
 
         oplot, tec_days, med, color=negro, linestyle=0, THICK=4
     
-        AXIS, XAXIS = 0, XRANGE=[0,tw], $
-                         XTITLE='Tiempo Universal [dias de '+old_month+']', $
-                         XTICKS=tw, $
+        AXIS, XAXIS = 0, XRANGE=[0,file_number], $
+                         XTITLE='Tiempo Universal [dias]', $
+                         XTICKS=file_number, $
                          XMINOR=8, $
                          XTICKNAME=X_label, $
                          COLOR=negro, $
+                         CHARTHICK=1.5,$
                          CHARSIZE = 0.9, $
                          TICKLEN=0.04
                          
         AXIS, XAXIS = 1, XRANGE=(!X.CRANGE+dy_i-0.25), $
-                         XTICKS=tw, $
+                         XTICKS=file_number, $
                          XMINOR=8, $
                          XTICKV=FIX(days), $       
                          XTICKN=STRING(days, FORMAT='(I02)'), $  
-                        CHARSIZE = 0.9, $                         
+                         CHARSIZE = 0.9, $
+                         CHARTHICK=1.5,$                         
                          COLOR=negro, $
                          TICKLEN=0.04
 
@@ -893,13 +822,14 @@ endcase
                          ystyle=2, $  
                          YTITLE = 'TEC y <TEC> [TECu]', $                          
                          COLOR=negro, $
+                         CHARTHICK=1.5,$
                          CHARSIZE = 0.9;, $
                         
         AXIS, YAXIS = 1, YRANGE=[down_tecdiff, up_tecdiff], $
                          ystyle=2, $                    
                          COLOR=negro, $
                          CHARSIZE = 0.9, $
-                         CHARTHICK=1;, $    
+                         CHARTHICK=1.5   
 ;###############################################################################
 ;second panel legend                   
         POLYFILL, [0.77,0.8,0.8,0.77], [0.564,0.564,0.567,0.567], color = negro, /NORMAL
@@ -945,23 +875,24 @@ endcase
 ;###############################################################################
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    y = 0.97
-   XYOuts, X, y, window_title, /Normal, color=negro, Alignment=0.5, Charsize=1.25
+   XYOuts, X, y, window_title, /Normal, color=negro, Alignment=0.5,$
+   Charsize=2, CHARTHICK = 1.5  
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    XYOuts, X, 0.949, 'Tiempo Local', /Normal, $
-   color=negro, Alignment=0.5, Charsize=0.8   
+   color=negro, Alignment=0.5, Charsize=0.8, CHARTHICK = 1.5   
 
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    XYOuts, X, 0.71, 'Tiempo Local', /Normal, $
-   color=negro, Alignment=0.5, Charsize=0.8  
+   color=negro, Alignment=0.5, Charsize=0.8, CHARTHICK = 1.5     
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    XYOuts, X, 0.468, 'Tiempo Local', /Normal, $
-   color=negro, Alignment=0.5, Charsize=0.8  
+   color=negro, Alignment=0.5, Charsize=0.8, CHARTHICK = 1.5     
    
    x = (!X.Window[1] - !X.Window[0]) / 2. + !X.Window[0]
    XYOuts, X, 0.231, 'Tiempo Local', /Normal, $
-   color=negro, Alignment=0.5, Charsize=0.8           
+   color=negro, Alignment=0.5, Charsize=0.8, CHARTHICK = 1.5              
 ;###############################################################################
    XYOuts, 0.14, 0.9, '(a)', /Normal, $
    color=negro, Alignment=0.5, Charsize=1.2, CHARTHICK= 3    
@@ -982,9 +913,9 @@ endcase
         
     ;DEVICE, /CLOSE
     SET_PLOT, Device_bak   
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;###############################################################################
 ; open the post stript device
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+    path = '../rutidl/output/eventos_tgm/'
         IF keyword_set(jpeg) THEN BEGIN
                 info = size(Image)
                 nx = info[1]
@@ -1003,8 +934,5 @@ endcase
                 print, '        Saving: '+path+'mag_tec_V2_'+Date+'.png'
                 print, ''
         ENDIF
-        RETURN 	
-                    
-end
-
-
+        RETURN 	                    
+END

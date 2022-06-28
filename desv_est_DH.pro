@@ -30,48 +30,49 @@
 ;
 ;
 
-function DH_teo, date
+FUNCTION teo, date
 
 	On_error, 2
-	compile_opt idl2, HIDDEN
+	COMPILE_OPT idl2, HIDDEN
 
 	year	= date[0]
 	month	= date[1]
 	day 	= date[2]	
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;###############################################################################
 ;reading data files
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-        date = string(year, month, day, format = '(I4, I02, I02)')
-       ; sts  = string(stats, format = '(A5)')
+;###############################################################################
+        date = STRING(year, month, day, FORMAT = '(I4, I02, I02)')
 		
-		file_name = '../rutidl/dH_teo/'+'teo_'+date+'.dst.early'
-		
+		file_name = '../master_thesis/datos/teoloyucan/teoloyucan/'+$
+		'teo_'+date+'.clean.dat'
+
 		file = FILE_SEARCH(file_name, COUNT=opened_files)
 		IF opened_files NE N_ELEMENTS(file) THEN MESSAGE, file_name+' not found'
 
 		number_of_lines = FILE_LINES(file)
-	   ; print, number_of_lines
+
 		data = STRARR(number_of_lines)
 
-		openr, lun, file, /GET_LUN, ERROR=err
-		readf, lun, data, FORMAT = '(A)'
-		CLOSE, lun
-		FREE_LUN, lun
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+		OPENR, LUN, file, /GET_LUN, ERROR=err
+		READF, LUN, data, FORMAT = '(A)'
+		CLOSE, LUN
+		FREE_LUN, LUN
+;###############################################################################
 ;extracting data and denfining an structure data
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
-        DStruct = {hora : 0, D_stdesv : 0., D : 0., H_stdesv : 0., H : 0., $
-        Z_stdesv : 0., Z : 0., N_stdesv : 0., N : 0., F_stdesv : 0., F : 0.}
+;###############################################################################
+        DStruct = {year:0, month:0, day:0, hour:0, minuntes:0, DOY:0, $ 
+                     TEOD:0., TEOH:0., TEOZ:0., TEOF:0.}
 
 		teo_mag = REPLICATE(DStruct, number_of_lines)	
-  
-		READS, data[0:number_of_lines-1], teo_mag, $
-		FORMAT='(I2, F10, F8, F10, F10, F10, F10, F10, F10, F10, F10)'
-		
-		return, teo_mag		
-end
+        header = 0             ; Defining number of lines of the header 
 
-pro teo, date_i, date_f
+		READS, data[header:number_of_lines-1], teo_mag, $
+		FORMAT='(I4,X,I02,X,I02,X,I02,X,I02,8X,I03,F12,F10,F10,F10)'
+
+		RETURN, teo_mag		
+END
+
+pro desv_est_DH, date_i, date_f
 
 	On_error, 2
 	compile_opt idl2, HIDDEN
@@ -82,10 +83,8 @@ pro teo, date_i, date_f
 
 	yr_f	= date_f[0]
 	mh_f	= date_f[1]
-	dy_f 	= date_f[2]	
-;##############################################################################
-; reading data files
-;##############################################################################
+	dy_f 	= date_f[2]
+
         file_number    = (JULDAY(mh_f, dy_f, yr_f) - JULDAY(mh_i, dy_i, yr_i))+1
         data_file_name = strarr(file_number)
         string_date     = strarr(file_number)
@@ -97,8 +96,12 @@ pro teo, date_i, date_f
                 tmp_julday  = JULDAY(mh_i, dy_i, yr_i)
 
                 CALDAT, tmp_julday+i, tmp_month, tmp_day, tmp_year
-                string_date[i]    = string(tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)')
-                data_file_name[i] = '../rutidl/dH_teo/'+'teo_'+string_date[i]+'.dst.early'
+                
+                string_date[i]    = string(tmp_year, tmp_month, tmp_day, $
+                FORMAT='(I4,I02,I02)')
+                
+                data_file_name[i] = '../master_thesis/datos/teoloyucan/teoloyucan/'$
+                +'teo_'+string_date[i]+'.clean.dat'
         ENDFOR
 
         exist_data_file   = FILE_TEST(data_file_name)
@@ -109,28 +112,31 @@ pro teo, date_i, date_f
                 PRINT, FORMAT="('                missing GMS_YYYYMMDD.k_index.',A,' impossible to plot all data.')"              
         ENDIF
 
-        fecha = string(yr_i, mh_i, dy_i, yr_f, mh_f, dy_f, format = '(I4,I02,I02,"_",I4,I02,I02)')
-
-        H    = FLTARR(file_number*24)        
-        H_STDESV    = FLTARR(file_number*24)
-                       
+        H    = FLTARR(file_number*1440)                               
         FOR i = 0, N_ELEMENTS(exist_data_file)-1 DO BEGIN
                 IF exist_data_file[i] EQ 1 THEN BEGIN
                         tmp_year    = 0
                         tmp_month   = 0
                         tmp_day     = 0
-                        READS, string_date[i], tmp_year, tmp_month, tmp_day, FORMAT='(I4,I02,I02)'
-                        ;print, tmp_year, tmp_month, tmp_day
-                        dat = DH_teo([tmp_year, tmp_month, tmp_day])
+                        READS, string_date[i], tmp_year, tmp_month, tmp_day, $
+                        FORMAT='(I4,I02,I02)'
                         
-                        H[i*24:(i+1)*24-1] = dat.H[*]                                                
-                        H_STDESV[i*24:(i+1)*24-1] = dat.H_stdesv[*]
-                                                                                              
+                        dat = teo([tmp_year, tmp_month, tmp_day])
+                        
+                        H[i*1440:(i+1)*1440-1] = dat.TEOH[*]                                                
                 ENDIF ELSE BEGIN
-                         H[i*24:(i+1)*24-1] = 999999.0
-                         H_STDESV[i*24:(i+1)*24-1] = 999999.0                        
+                         H[i*1440:(i+1)*1440-1] = 999999.0
                 ENDELSE                
         ENDFOR
+
+        i_nan1 = WHERE(H EQ 999999.00, ncount)
+        i_nan2 = WHERE(H EQ 99999.0, n2count) 
+       
+        prcent_nan = FLOAT(ncount+n2count)*100.0     
+        PRINT,'porcentaje de valores NaN:', prcent_nan/N_ELEMENTS(H),'%'       
+        PRINT, 'cantidad de valores NaN: ', N_ELEMENTS(i_nan1)+N_ELEMENTS(i_nan2)
+        PRINT, 'Posición de valores NaN: '
+        ;PRINT, i_nan1, i_nan2
 
         for i=0, n_elements(H)-1 do begin
             if H[i] eq 999999.0 then begin

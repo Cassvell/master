@@ -1,4 +1,4 @@
-nT                   TGM1                TGM2                TGM3                TGM4                TGM5                TGM6                TGM(General)
+nT                   TGM1                TGM2                TGM3                TGM4                TGM5                TGM6                Correlacion(General)
 0100                 0.98                0.93                0.97                0.95                0.92                0.93                0.93
 0090                 0.98                0.93                0.97                0.95                0.92                0.93                0.93
 0080                 0.98                0.87                0.97                0.95                0.92                0.93                0.90
