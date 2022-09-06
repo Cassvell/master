@@ -313,9 +313,9 @@ PRO diono, r_ip, date_i, date_f
                 
 		        data_file_name_kp[i] = data_path+'/kp/daily/kp_'+string_date_2[i]+'.txt' 	
                 data_file_name_dst[i]= data_path+'/dst/daily/dst_'+string_date_2[i]+'.txt'		        	        
-                data_file_name_dh[i] = data_path+'/dH_teo/'+'teo_'+string_date[i]+'.dst.early'
-                data_file_name_tec[i]= data_path+'/tec/'+'tec_'+string_date_2[i]+'.txt'
-                data_file_name_km[i] = data_path+'/Kmex/'+'teo_'+string_date[i]+'.index.final'
+                data_file_name_dh[i] = data_path+'/dH_teo/teo_'+string_date[i]+'.dst.early'
+                data_file_name_tec[i]= data_path+'/tec/tec_'+string_date_2[i]+'.txt'
+                data_file_name_km[i] = data_path+'/Kmex/teo_'+string_date[i]+'.index.final'
                 		       
 		        file = FILE_SEARCH(data_file_name_km[i], COUNT=opened_files)
 	            IF opened_files NE N_ELEMENTS(file) THEN begin

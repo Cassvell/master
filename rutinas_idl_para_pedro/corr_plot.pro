@@ -1,11 +1,8 @@
-;+
-; NAME:
-;       ????????????????
-;
+; NAME: corr_plot.pro
 ;
 ; PURPOSE:
-;
-;       ????????????????
+;       Compute correlation between geomagnetic indeces Dst and DH for n Geomagnetic storm
+;       events.
 ;
 ; AUTHOR:
 ;
@@ -21,48 +18,56 @@
 ;       Numerical Data Analize
 ;
 ; CALLING SEQUENCE:
-;
-;       ?????????????????????
+;       .r corr_plot
+;       corr_plot
 ;
 ;       Description:
 ;       ???????????????????????
 ;
 ;
 ; PARAMETERS:
-;       ???????    : ?????????????
+;       Dst index    : DH index
 ;
 ; KEYWORD PARAMETERS:
 ;
 ;       /????????? : ?????????????
 ;
-; DEPENDENCIAS:
+; DEPENDENCIAS:a
 ;       ?????????? : ????????????
 ;
 ; ARCHIVOS ANALIZADOS:
 ;       ??????????
 ;
 ; ARCHIVOS DE SALIDA:
-;
+;       figura .PNG
 ; HISTORIA:
-;
+;       versión 1.3
+;###############################################################################
+;###############################################################################0.5, .1, 0.01, 0.35
+FUNCTION svdfit_funct, X, m
+   RETURN,[ [1.0], [1.0*X], [((1.0+(2.35*X))/((1.0*X) + 1.0))^2] ]
+END
+;###############################################################################
+;###############################################################################
+PRO corr_plot;, idate, fdate
 
+        input_dir  = '/home/c-isaac/Escritorio/proyecto/master_thesis/rutidl/output/'
+        path       = input_dir				
 
+       ; header = 1      ; Defining number of lines of the header 
 
-
-
-
-PRO correlation_plot;, idate, fdate
-
-        input_dir  = '~/rutidl/output/'
-        path       = input_dir
+       ; idate = string(iyr, imh, idy, format = '(I4, I02, I02)')
+      ;  fdate = string(fyr, fmh, fdy, format = '(I4, I02, I02)')
+                
         
         data_files         = FILE_SEARCH(input_dir+'tgmdata'+'?????????????????'+'.txt')
-        print, data_files 
+         
         files_lines_number = FILE_LINES(data_files)
         MX_latitude        = 28.06*!Pi/180.
-        corellation_index  = FLTARR(N_ELEMENTS(data_files));<<<<<<<<<<<<<<<<preguntar
+       ; corellation_index  = FLTARR(N_ELEMENTS(data_files));<<<<<<<<<<<<<<<<preguntar
         
-        limits = [0, -20, -40, -60, -80, -100, -125, -150, -200]
+        limits = [0, -10, -20, -30, -40, -50, -60, -70, -80,$
+         -90, -100, -110, -120, -140, -160, -200]
         
 ;print, data_files
 
@@ -81,7 +86,7 @@ PRO correlation_plot;, idate, fdate
         data[*].correlation[*]  = 999.
 ;print, data[*].number_of_lines
 ;Return
-
+;###############################################################################
         FOR event=0, N_ELEMENTS(data_files)-1 DO BEGIN
                 data_strings  = STRARR(files_lines_number[event])
                 
@@ -115,7 +120,7 @@ PRO correlation_plot;, idate, fdate
                 data[event].dst[tmp_index] = 999.
         ENDFOR
 
-
+;###############################################################################
         FOR event=0, N_ELEMENTS(data_files)-1 DO BEGIN
                 FOR i=0, N_ELEMENTS(limits)-1 DO BEGIN
                         IF i EQ 0 THEN index_tmp = WHERE(data[event].dst[*] GE limits[i] AND data[event].dst[*] LT 200 ) $
@@ -140,97 +145,115 @@ PRO correlation_plot;, idate, fdate
                 devs[i]  = STDDEV( data[index_tmp].correlation[i]^2, /NAN)
                 ;maxs[i]  = MAX( data[index_tmp].correlation[i] )
                 ;mins[i]  = MIN( data[index_tmp].correlation[i] )
-                print, means[i], devs[i];, maxs[i], mins[i]
+             ;   print, means[i], devs[i];, maxs[i], mins[i]
         ENDFOR
-
 ;###############################################################################          
-; define device and color parameters 
-;###############################################################################      
+; define device and color parameters       
         Device_bak = !D.Name 
         SET_PLOT, 'Z'
         
-        tmp_spam = 1
-        
-        Xsize=fix(1600*tmp_spam)
+        Xsize=fix(1600)
         Ysize=600
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
         DEVICE, z_buffering=O
         DEVICE, set_character_size = [10, 12]
-             
-        chr_size1 = 0.9
-        chr_thick1= 1.0
-        space     = 0.015
-        rojo      = 248
+
         amarillo  = 220
-        verde     = 130
-        negro     = 0
-        azul      = 60
-        blanco    = 255
         gris      = 130
-        morado    = 16
-        
+        blanco    = 255
+        negro     = 0
     TVLCT, R_bak, G_bak, B_bak, /GET
         
     LOADCT, 0, /SILENT
 
-    ;path = '../rutidl/output/eventos_tgm/'
-
         event = 0
         PLOT, limits[WHERE(data[event].correlation_points[*] GT 3)]+0.5*(limits[1]+limits[0]), $
         data[event].correlation[WHERE(data[event].correlation_points[*] GT 3)], $
-        MAX=1., XRANGE=[10.,-210], YRANGE=[0., 1.], BACKGROUND = blanco, $
+        MAX=1., XRANGE=[10.,-210], YRANGE=[0, 1.0], BACKGROUND = blanco, $
         Xtitle='Dst', Ytitle='R!U2!N', Xstyle=5, Ystyle=5, /NODATA, color=negro,$
-        charsize=1.5, POSITION=[0.13,0.1,0.9,0.9], TITLE='Correlacion entre indice Dst y H'
+        CHARSIZE=1.9, POSITION=[0.08,0.12,0.9,0.9], TITLE='Correlacion entre indices Dst y H', $
+        CHARTHICK=2.0
 
 
         POLYFILL, [10.,-210.,-210.,10.], [0.,0.,0.5,0.5], color=amarillo
 
-        AXIS, Xaxis=0, Xtitle='Dst', charsize=1.5, color=negro, XRANGE=[10.,-210], Xstyle=1
-        AXIS, Xaxis=1, color=negro, XTICKNAME=REPLICATE( ' ', 8 ), XRANGE=[10.,-210]
+        AXIS, Xaxis=0, Xtitle='Dst [nT]', CHARSIZE=1.8, color=negro, XRANGE=[10.,-210], Xstyle=1, $
+        CHARTHICK=2
+        AXIS, Xaxis=1, color=negro, XTICKNAME=REPLICATE( ' ', 8 ), XRANGE=[10.,-210], $
+        CHARTHICK=2
         
-        AXIS, Yaxis=0, Ytitle='R!U2!N', charsize=1.5, color=negro, Ystyle=1
-        AXIS, yaxis=1, color=negro, YTICKNAME=REPLICATE( ' ', 7 )
+        AXIS, Yaxis=0, Ytitle='R!U2!N', CHARSIZE=1.8, color=negro, Ystyle=1, $
+        CHARTHICK=2
+        AXIS, yaxis=1, color=negro, YTICKNAME=REPLICATE( ' ', 7 ), $
+        CHARTHICK=2
 
         
-    symbols=[1,2,3,4,5,6]
-    colors=[1, 1, 1, 1, 1, 1]*gris
+    symbols=[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]
+    colors=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]*gris
     
         FOR event=0, N_ELEMENTS(data_files)-1 DO BEGIN
-                oplot, limits[WHERE(data[event].correlation_points[*] GT 3)], $
-                data[event].correlation[WHERE(data[event].correlation_points[*] GT 3)], $
-                psym=symbols[event], color=colors[event], thick=4, symsize=1.5
+               ; oplot, limits[WHERE(data[event].correlation_points[*] GT 3)], $
+               ; data[event].correlation[WHERE(data[event].correlation_points[*] GT 3)], $
+               ; psym=symbols[event], color=colors[event], thick=4, symsize=1.5
                 
                 ;oplot, limits[WHERE(data[event].correlation_points[*] GT 3)], $
                 ;data[event].correlation[WHERE(data[event].correlation_points[*] GT 3)], $
                 ;color=colors[event]                
         ENDFOR
-        print, !Y.CRANGE
+      ;  print, !Y.CRANGE
 
         x_correlation = (!X.CRANGE[1]-!X.CRANGE[0])*FINDGEN(101)/100+!X.CRANGE[0]
         y_correlation = INTERPOL(means[*],limits[*], x_correlation)
-        oplot, x_correlation[*], y_correlation[*], color=negro, thick=4
+       ; oplot, x_correlation[*], y_correlation[*], color=negro, thick=4
 
+        xvec = (FINDGEN(16)*(-10))-10
+        
+        
+        yvec      = FLTARR(N_ELEMENTS(x_correlation[*]))
+        yvec2      = FLTARR(N_ELEMENTS(x_correlation[*]))  
+        X = FINDGEN(16)*(-10) + 10.
+        
+        ;Se declara la función:
+     ;   func = svdfit_funct(xvec, 0.5, .1, 0.01, 0.35, .01, 0.1)
+
+              
+        fit = POLY_FIT(xvec, means[*], 5, MEASURE_ERRORS=devs[*], YFIT=yvec)
+        line_fit = INTERPOL(yvec, N_ELEMENTS(x_correlation[*]), /QUADRATIC, /SPLINE)      
+        
+        M=[1.0, 1.0, 1.0]
+        
+        
+        fit2 = SVDFIT(xvec, means[*], A=M, MEASURE_ERRORS=devs[*], FUNCTION_NAME='svdfit_funct', YFIT=yvec2)
+        line_fit2 = INTERPOL(yvec2, N_ELEMENTS(x_correlation[*]), /QUADRATIC, /SPLINE) 
+               
+        OPLOT, x_correlation[*], line_fit, color=negro, thick=2
+        OPLOT, x_correlation[*], line_fit2, color=negro, thick=4, LINESTYLE=2        
+        print, '################################################################'
+      ;  print, fit
+        print, '################################################################'
+     ;   print, fit2                
+        print, '################################################################'
+              
+        
         A = FINDGEN(17) * (!PI*2/16.)
-        ERRPLOT, limits[*], means[*]+devs[*], means[*]-devs[*], color=negro
-        USERSYM, COS(A), SIN(A), /FILL
-        oplot, limits[*], means[*], color=blanco, PSYM = 8, symsize=2
-        oplot, limits[*], means[*], color=negro, PSYM = 8, symsize=1
-        USERSYM, COS(A), SIN(A)
-        oplot, limits[*], means[*], color=negro, PSYM = 8, symsize=2, thick=4
-        
-        
-
+        ERRPLOT, limits[0:12]+5, means[0:12]+devs[0:12], means[0:12]-devs[0:12], color=negro
+        ERRPLOT, limits[13:14]+10, means[13:14]+devs[13:14], means[13:14]-devs[13:14], color=negro 
+        ERRPLOT, limits[15]+20, means[15]+devs[15], means[15]-devs[15], color=negro         
+               
+        USERSYM, COS(A), SIN(A), /FILL             
+                
+        oplot, limits[0:12]+5, means[0:12], color=negro, PSYM = 8, symsize=1
+        oplot, limits[13:14]+10, means[13:14], color=negro, PSYM = 8, symsize=1
+        PLOTS, limits[15]+20, means[15], color=negro, PSYM = 8, symsize=1                                   
+;###############################################################################       
     Image=TVRD() 
     TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!    
     TVLCT, R_bak, G_bak, B_bak
         
     ;DEVICE, /CLOSE
     SET_PLOT, Device_bak   
-
-
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
+;###############################################################################
 ; open the post stript device
-;-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-
         IF keyword_set(jpeg) THEN BEGIN
                 info = size(Image)
                 nx = info[1]
@@ -239,14 +262,14 @@ PRO correlation_plot;, idate, fdate
                 true_image[0,*,*] = reds[image]
                 true_image[1,*,*] = greens[image]
                 true_image[2,*,*] = blues[image]
-                write_jpeg, path+'correlation_plotV3.jpg', True_Image, true=1
+                write_jpeg, path+'correlation_plotV4.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'correlation_plotV3.png', Image, reds,greens,blues
+                WRITE_PNG, path+'correlation_plotV4.png', Image, reds,greens,blues
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'correlation_plotV3.png'
+                print, '        Saving: '+path+'correlation_plotV4.png'
                 print, ''
         ENDIF
         RETURN 	

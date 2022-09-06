@@ -1,19 +1,21 @@
 ;+
 ; NAME:
-;       ????????????????
+;       scatter_plot.pro
 ;
 ;
 ; PURPOSE:
 ;
-;       ????????????????
+;       statistic data analysis
 ;
 ; AUTHOR:
 ;
 ;       Pedro Corona Romero
+;       C. Isaac Castellanos Velazco
 ;       Instituto de Geofisica, UNAM
 ;       UNAM Campus Morelia, Antigua Carretera a Patzcuaron,
 ;       Exhacienda de San Jose del Cerrito, Morelia, Michoacan, Mexico
 ;       piter.cr@gmail.com
+;       ccastellanos@igeofisica.unam.mx
 ;       06.iv.mmxxii
 ;
 ; CATEGORY:
@@ -21,15 +23,15 @@
 ;       Numerical Data Analize
 ;
 ; CALLING SEQUENCE:
-;
-;       ?????????????????????
+;       .r scatter_plot
+;       scatter_plot
 ;
 ;       Description:
 ;       ???????????????????????
 ;
 ;
 ; PARAMETERS:
-;       ???????    : ?????????????
+;       Dst index    : dH index
 ;
 ; KEYWORD PARAMETERS:
 ;
@@ -41,28 +43,42 @@
 ; ARCHIVOS ANALIZADOS:
 ;       ??????????
 ;
-; ARCHIVOS DE SALIDA:
+; ARCHIVOS DE SALIDA: grafica.png de dispersión
 ;
 ; HISTORIA:
-;
+;   versión 1.1, agosto 2022
 
 
 
 
 
 
-PRO correlation_plot;, idate, fdate
+PRO scatter_plot;, idate, fdate
 
-        input_dir  = '~/rutidl/output/'
+        input_dir  = '/home/c-isaac/Escritorio/proyecto/master_thesis/rutidl/output/'
         path       = input_dir
+
+	;iyr	= idate[0]
+	;imh	= idate[1]
+	;idy = idate[2]
+	
+	;fyr	= fdate[0]
+	;fmh	= fdate[1]
+	;fdy = fdate[2]					
+
+       ; header = 1      ; Defining number of lines of the header 
+
+       ; idate = string(iyr, imh, idy, format = '(I4, I02, I02)')
+      ;  fdate = string(fyr, fmh, fdy, format = '(I4, I02, I02)')
+                
         
         data_files         = FILE_SEARCH(input_dir+'tgmdata'+'?????????????????'+'.txt')
-        print, data_files 
+         
         files_lines_number = FILE_LINES(data_files)
         MX_latitude        = 28.06*!Pi/180.
-        corellation_index  = FLTARR(N_ELEMENTS(data_files));<<<<<<<<<<<<<<<<preguntar
+       ; corellation_index  = FLTARR(N_ELEMENTS(data_files));<<<<<<<<<<<<<<<<preguntar
         
-        limits = [0, -20, -40, -60, -80, -100, -125, -150, -200]
+        limits = [-100, -400]
         
 ;print, data_files
 
@@ -75,13 +91,15 @@ PRO correlation_plot;, idate, fdate
                      correlation_points : INTARR(N_ELEMENTS(limits))}
         
         data = REPLICATE(dat_str0, N_ELEMENTS(data_files))
-        ;data[*].number_of_lines = files_lines_number
+        data[*].number_of_lines = files_lines_number
 ;print, data[*].number_of_lines
         data[*].number_of_lines = files_lines_number-1
         data[*].correlation[*]  = 999.
 ;print, data[*].number_of_lines
 ;Return
-
+         dh = FLTARR(1)
+         
+         dst = FLTARR(1)
         FOR event=0, N_ELEMENTS(data_files)-1 DO BEGIN
                 data_strings  = STRARR(files_lines_number[event])
                 
@@ -94,9 +112,8 @@ PRO correlation_plot;, idate, fdate
                 tmp_data = REPLICATE(dat_str1, data[event].number_of_lines)
                 
                 READS, data_strings[1:*], tmp_data, $
-                FORMAT='(I03,X,F4.1,X,I04,X,F6.1)'
+                FORMAT='(I03,X,F4.1,X,I04,F6.1)'
                 
-               ; print, dst
                 data[event].doy[*] = 999
 ;print, data[event].number_of_lines, N_ELEMENTS(tmp_data[*].doy)
 ;RETURN
@@ -110,21 +127,44 @@ PRO correlation_plot;, idate, fdate
                 
                 data[event].dh[*] = 999.
                 data[event].dh[0:data[event].number_of_lines-1]=tmp_data[*].dh
-                
+                              
+                dh  = [dh, tmp_data[*].dh]
+                dst = [dst, tmp_data[*].dst*cos(MX_latitude)]
+               ; print, correlate(dh, dst)^2
                 tmp_index = WHERE(data[event].dh[*] GE 999.)
                 data[event].dst[tmp_index] = 999.
+
         ENDFOR
 
-
+      ;  print, CORRELATE(dh, dst)^2
+        
+        idx = WHERE(dst GE -100)      
+        j =   WHERE(dst GE -400 AND dst LT -100)
+        
+        corr1 = CORRELATE(dh[idx], dst[idx])^2
+        corr2 =  CORRELATE(dh[j], dst[j])^2
+        
+      ;  print, corr1
+        ;print, N_ELEMENTS(dh[j])
+        
+    correlation = FLTARR(N_ELEMENTS(data_files))
         FOR event=0, N_ELEMENTS(data_files)-1 DO BEGIN
+            correlation[event] = CORRELATE(data[event].dst[0:data[event].number_of_lines-1], $
+            data[event].dh[0:data[event].number_of_lines-1])
+            
+         ;   print, N_ELEMENTS(data[*].dst[0:data[event].number_of_lines-1])
                 FOR i=0, N_ELEMENTS(limits)-1 DO BEGIN
                         IF i EQ 0 THEN index_tmp = WHERE(data[event].dst[*] GE limits[i] AND data[event].dst[*] LT 200 ) $
                                   ELSE index_tmp = WHERE(data[event].dst[*] GE limits[i] AND data[event].dst[*] LT limits[i-1] )
+      
                         IF N_ELEMENTS(index_tmp) GT 2 THEN data[event].correlation[i] = CORRELATE(data[event].dst[index_tmp], data[event].dh[index_tmp])
                         data[event].correlation_points[i] = N_ELEMENTS(index_tmp)
                 ENDFOR
         ENDFOR
         
+   ; corr_med    = MEAN(correlation)^2
+   ; corr_std    = STDDEV(correlation)^2
+   ; print,  corr_med,  corr_std      
         means=FLTARR(N_ELEMENTS(limits))
         devs =FLTARR(N_ELEMENTS(limits))
         maxs =FLTARR(N_ELEMENTS(limits))
@@ -132,15 +172,16 @@ PRO correlation_plot;, idate, fdate
         ;print, means
         for i=0, N_ELEMENTS(limits)-1 DO BEGIN
                 ;print, n_elements(limits), limits
-               ; print, data[*].correlation[i]
+            ;    print, data[*].correlation[i]
                 index_tmp = WHERE(data[*].correlation[i] LT 100)
-               ; print, index_tmp
+                print, index_tmp
                 ;print, data[index_tmp].correlation[i]
                 means[i] = Mean( data[index_tmp].correlation[i]^2 )
                 devs[i]  = STDDEV( data[index_tmp].correlation[i]^2, /NAN)
-                ;maxs[i]  = MAX( data[index_tmp].correlation[i] )
-                ;mins[i]  = MIN( data[index_tmp].correlation[i] )
-                print, means[i], devs[i];, maxs[i], mins[i]
+                maxs[i]  = MAX( data[index_tmp].correlation[i] )
+                mins[i]  = MIN( data[index_tmp].correlation[i] )
+                ;print, means[i], devs[i];, maxs[i], mins[i]
+              ;  print, data[index_tmp].correlation[i]^2;, data[index_tmp].doy
         ENDFOR
 
 ;###############################################################################          
@@ -149,24 +190,23 @@ PRO correlation_plot;, idate, fdate
         Device_bak = !D.Name 
         SET_PLOT, 'Z'
         
-        tmp_spam = 1
-        
-        Xsize=fix(1600*tmp_spam)
+        Xsize=fix(600)
         Ysize=600
         DEVICE, SET_RESOLUTION = [Xsize,Ysize]
         DEVICE, z_buffering=O
         DEVICE, set_character_size = [10, 12]
              
         chr_size1 = 0.9
-        chr_thick1= 1.0
+        chr_thick1= 1.1
         space     = 0.015
         rojo      = 248
-        amarillo  = 220
-        verde     = 130
+        amarillo  = 200
+        naranja   = 220
+        verde     = 100
         negro     = 0
-        azul      = 60
+        azul      = 90
         blanco    = 255
-        gris      = 130
+        ;gris      = 130
         morado    = 16
         
     TVLCT, R_bak, G_bak, B_bak, /GET
@@ -174,51 +214,67 @@ PRO correlation_plot;, idate, fdate
     LOADCT, 0, /SILENT
 
     ;path = '../rutidl/output/eventos_tgm/'
-
+    H = TeXtoIDL('\DeltaH')
         event = 0
-        PLOT, limits[WHERE(data[event].correlation_points[*] GT 3)]+0.5*(limits[1]+limits[0]), $
-        data[event].correlation[WHERE(data[event].correlation_points[*] GT 3)], $
-        MAX=1., XRANGE=[10.,-210], YRANGE=[0., 1.], BACKGROUND = blanco, $
-        Xtitle='Dst', Ytitle='R!U2!N', Xstyle=5, Ystyle=5, /NODATA, color=negro,$
-        charsize=1.5, POSITION=[0.13,0.1,0.9,0.9], TITLE='Correlacion entre indice Dst y H'
-
+   up0  =  100
+   down0=-500        
+   slope = findgen(601)-500
+   x1= slope
+   y1= slope
+   plot, x1,y1, xstyle=5, ystyle=5, color=negro, background=blanco, YRANGE=[down0,up0], $
+   XRANGE=[down0,up0], CHARSIZE = 1.2, CHARTHICK=1.2, Xtitle='Dst', Ytitle='H',$
+   POSITION=[0.17,0.1,0.9,0.9], TITLE='Dispersion entre Dst y '+H, /NODATA                 
+    
 
         POLYFILL, [10.,-210.,-210.,10.], [0.,0.,0.5,0.5], color=amarillo
-
-        AXIS, Xaxis=0, Xtitle='Dst', charsize=1.5, color=negro, XRANGE=[10.,-210], Xstyle=1
-        AXIS, Xaxis=1, color=negro, XTICKNAME=REPLICATE( ' ', 8 ), XRANGE=[10.,-210]
-        
-        AXIS, Yaxis=0, Ytitle='R!U2!N', charsize=1.5, color=negro, Ystyle=1
-        AXIS, yaxis=1, color=negro, YTICKNAME=REPLICATE( ' ', 7 )
-
-        
-    symbols=[1,2,3,4,5,6]
-    colors=[1, 1, 1, 1, 1, 1]*gris
     
-        FOR event=0, N_ELEMENTS(data_files)-1 DO BEGIN
-                oplot, limits[WHERE(data[event].correlation_points[*] GT 3)], $
-                data[event].correlation[WHERE(data[event].correlation_points[*] GT 3)], $
-                psym=symbols[event], color=colors[event], thick=4, symsize=1.5
+  ;  POLYFILL, [!X.CRANGE[0], 0, 0, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], 0, 0], COLOR=verde
+    
+    POLYFILL, [!X.CRANGE[0], -100, -100, !X.CRANGE[0]], [!Y.CRANGE[0], !Y.CRANGE[0], -100, -100], COLOR=amarillo            
+
+        AXIS, Xaxis=0, Xtitle='Dst [nT]', CHARSIZE=1.1, color=negro, XRANGE=[down0,up0], Xstyle=1, $
+        CHARTHICK=2
+        AXIS, Xaxis=1, color=negro, XTICKNAME=REPLICATE( ' ', 8 ), XRANGE=[down0,up0], $
+        CHARTHICK=2
+        
+        AXIS, Yaxis=0, Ytitle=H+' [nT]', CHARSIZE=1.1, color=negro, Ystyle=1, $
+        CHARTHICK=2
+        AXIS, yaxis=1, color=negro, YTICKNAME=REPLICATE( ' ', 7 ), $
+        CHARTHICK=2
+
+
+    OPLOT, dst, dh, PSYM=4, COLOR=azul, SYMSIZE=0.5        
+        
+    OPLOT, x1, y1, THICK=1.0, COLOR=negro 
+;###############################################################################                             
+;###############################################################################
+    med = texToidl('R^2 = ')
+        XYOUTS, 0.2, 0.75 , /NORMAL, $
+             ;   med, COLOR=negro, $
+                string(med, 0.76, FORMAT='(A, F4.2)') , COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1   
                 
-                ;oplot, limits[WHERE(data[event].correlation_points[*] GT 3)], $
-                ;data[event].correlation[WHERE(data[event].correlation_points[*] GT 3)], $
-                ;color=colors[event]                
-        ENDFOR
-        print, !Y.CRANGE
-
-        x_correlation = (!X.CRANGE[1]-!X.CRANGE[0])*FINDGEN(101)/100+!X.CRANGE[0]
-        y_correlation = INTERPOL(means[*],limits[*], x_correlation)
-        oplot, x_correlation[*], y_correlation[*], color=negro, thick=4
-
-        A = FINDGEN(17) * (!PI*2/16.)
-        ERRPLOT, limits[*], means[*]+devs[*], means[*]-devs[*], color=negro
-        USERSYM, COS(A), SIN(A), /FILL
-        oplot, limits[*], means[*], color=blanco, PSYM = 8, symsize=2
-        oplot, limits[*], means[*], color=negro, PSYM = 8, symsize=1
-        USERSYM, COS(A), SIN(A)
-        oplot, limits[*], means[*], color=negro, PSYM = 8, symsize=2, thick=4
-        
-        
+    desv = texToidl('(100 \leq Dst \leq -100)')                
+        XYOUTS, 0.2, 0.80 , /NORMAL, $
+                 desv, COLOR=negro, $
+                ;desv+' '+corr_std, COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1 
+;###############################################################################
+    med = texToidl('R^2 = ')
+        XYOUTS, 0.2, 0.55 , /NORMAL, $
+             ;   med, COLOR=negro, $
+                string(med, 0.63, FORMAT='(A, F4.2)') , COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1   
+                
+    desv = texToidl('(-100 \leq Dst \leq -400)')                
+        XYOUTS, 0.2, 0.60 , /NORMAL, $
+                desv , COLOR=negro, $
+                ;desv+' '+corr_std, COLOR=negro, $
+                CHARSIZE = 1.2, $
+                CHARTHICK=chr_thick1 
 
     Image=TVRD() 
     TVLCT, reds, greens, blues, /get                          ; reads Z buffer !!    
@@ -239,14 +295,14 @@ PRO correlation_plot;, idate, fdate
                 true_image[0,*,*] = reds[image]
                 true_image[1,*,*] = greens[image]
                 true_image[2,*,*] = blues[image]
-                write_jpeg, path+'correlation_plotV3.jpg', True_Image, true=1
+                write_jpeg, path+'dispersion_plot.jpg', True_Image, true=1
         ENDIF ELSE BEGIN
                 IF NOT (keyword_set(quiet) OR keyword_set(png)) THEN print, '        Setting PNG as default file type.'
-                WRITE_PNG, path+'correlation_plotV3.png', Image, reds,greens,blues
+                WRITE_PNG, path+'dispersion_plot.png', Image, reds,greens,blues
         ENDELSE
 
         IF NOT keyword_set(quiet) THEN BEGIN
-                print, '        Saving: '+path+'correlation_plotV3.png'
+                print, '        Saving: '+path+'dispersion_plot.png'
                 print, ''
         ENDIF
         RETURN 	
